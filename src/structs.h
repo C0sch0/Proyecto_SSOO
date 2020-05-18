@@ -27,6 +27,14 @@ typedef struct directory_entry_aux{
   char file_name[29];
 } Entry_aux;
 
+<<<<<<< HEAD
+=======
+typedef struct directory_entry{
+  bool valid; //1 bit --> validez
+  Index *file_pointer; //23 bits --> puntero al archivo
+  char *file_name[29]; //29 bytes --> nombre de archivo incluyendo extension (ASCII)
+} Entry;
+>>>>>>> updating structs
 
 /// estructura entrada directorio final-->tami
 typedef struct directory_entry{
@@ -35,9 +43,14 @@ typedef struct directory_entry{
   char *file_name;
 } Entry;
 
+<<<<<<< HEAD
 
 typedef struct block_directory {
 Entry entries[256]; // cad aentrada corresponde a un archivo en particular
+=======
+typedef struct block_directory {
+Entry *entries; // cad aentrada corresponde a un archivo en particular
+>>>>>>> updating structs
 } Directory;
 
 
