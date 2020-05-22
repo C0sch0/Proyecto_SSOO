@@ -36,6 +36,7 @@ typedef struct directory_entry{
 } Entry;
 
 
+
 typedef struct block_directory {
   Entry *entries[256]; // cad aentrada corresponde a un archivo en particular
 } Directory;

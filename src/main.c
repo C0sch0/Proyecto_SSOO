@@ -27,6 +27,7 @@ void cr_mount(char* diskname)
 
 void directorio_append(Directory* bloque, Entry *entrada, int i)
 {
+
   bloque-> entries[i] = entry_init();
   memcpy(bloque-> entries[i]->file_name, entrada->file_name, 29);
 }
@@ -49,6 +50,7 @@ int cr_exists(unsigned disk, char* filename)
     		printf("existe %s\n", disco.entries[i]->file_name );
     		return 1;
     	}
+
     }
     printf("no existe\n");
     return 0;
@@ -67,8 +69,6 @@ void cr_ls(unsigned disk)
 		}
 	}
 }
-
-
 
 void create_dir_blocks()
 {
@@ -129,6 +129,7 @@ void print_bitmap_bin(Bitmap* bitmap_block, bool hex)
 	printf("Bloques Libres: %d\n", libres);
 	printf("Bloques ocupados: %d\n", ocupados);
 }
+
 
 void cr_bitmap(unsigned disk, bool hex)
 {
@@ -221,8 +222,26 @@ void destroy_bitmaps()
 	}
 }
 
-int main() {
+void create_cr_bitmaps()
+{
+	FILE* disk = fopen("simdiskfilled.bin", "r");
+	for(int i = 0; i < 4; i++)
+	{
+		char* mapp = malloc(sizeof(char)*8192);
+		int hasta = 536870912*i + 8192;
+  	fseek(disk, hasta , SEEK_SET);
+  	fread(mapp, 8192, 1, disk);
+  	memcpy(bitmaps[i]->map, mapp, 8192);
+		free(mapp);
+	}
+	fclose(disk);
+	for(int i = 0; i < 4; i++)
+	{
+		bitmaps[i] = bitmap_init();
+	}
+}
 
+int main() {
   cr_mount("simdiskfilled.bin");
   create_dir_blocks();
   cr_exists(3, "Baroque.mp3");
