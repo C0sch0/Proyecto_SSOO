@@ -32,32 +32,34 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
   memcpy(bloque-> entries[i]->file_name, entrada->file_name, 29);
 }
 
-
-
-int cr_exists(Directory disk, char* filename)
+int cr_exists(unsigned disk, char* filename)
 { char *ptr;
   char *str = malloc(sizeof(char)*29);
 
   for(int i = 0; i<256;i++){
   	//printf("%s\n",disk.entries[i]->file_name );
-    if(strncmp(disk.entries[i]->file_name , filename, 32) ==0 ){
-      printf("existe %s\n", disk.entries[i]->file_name );
+    if(strncmp(Dir_disk[disk]->entries[i]->file_name , filename, 32) ==0 ){
+      printf("existe %s\n", Dir_disk[disk]->entries[i]->file_name );
       return 1;
     }
-    memcpy(str, disk.entries[i]->file_name, 29);
+    memcpy(str, Dir_disk[disk]->entries[i]->file_name, 29);
     ptr = strtok(str,"/");
     ptr = strtok(NULL,"/");
-    if(strncmp(ptr , filename, 32) ==0 ){
-      printf("existe %s\n", disk.entries[i]->file_name );
-      return 1;
+    if(ptr!=NULL){
+      if(strncmp(ptr , filename, 32) ==0 ){
+        printf("existe %s\n", Dir_disk[disk]->entries[i]->file_name );
+        return 1;
+      }
     }
   }
-  printf("%s\n", disk.entries[0]->file_name);
+
+  printf("no existe %s\n", filename);
   free(str);
 
   //printf("no existe\n");
   return 0;
 }
+
 
 
 
