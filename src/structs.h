@@ -31,15 +31,13 @@ typedef struct directory_entry_aux{
 
 /// estructura entrada directorio final-->tami
 typedef struct directory_entry{
-  int valid;
   char *number;
   char *file_name;
 } Entry;
 
 
-
 typedef struct block_directory {
-  Entry entries[256]; // cad aentrada corresponde a un archivo en particular
+  Entry *entries[256]; // cad aentrada corresponde a un archivo en particular
 } Directory;
 
 

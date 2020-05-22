@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include<unistd.h>
 #include <sys/types.h>
-#include "structs.h"
+#include "linked_list.h"
 
 char* ruta_archivo;
 Directory* Dir_disk[4];
@@ -16,8 +16,7 @@ Entry * entry_init()
 {
   Entry * entrada = malloc(sizeof(Entry));
   entrada->file_name = malloc(sizeof(char)*29);
-  entrada->valid = malloc(sizeof(int));
-  entrada->number = malloc(sizeof(char)*23);
+  entrada->number = malloc(sizeof(char)*24);
   return entrada;
 }
 
@@ -28,33 +27,45 @@ void cr_mount(char* diskname)
 
 void directorio_append(Directory* bloque, Entry *entrada, int i)
 {
-  bloque-> entries[i] = *entry_init();
-  memcpy(bloque-> entries[i].file_name, entrada->file_name, 29);
+  bloque-> entries[i] = entry_init();
+  memcpy(bloque-> entries[i]->file_name, entrada->file_name, 29);
 }
 
+
 int cr_exists(Directory disk, char* filename)
-{
+{ char *ptr;
+
   for(int i = 0; i<256;i++){
-    if(strncmp(disk.entries[i].file_name , filename, 32) ==0 ){
-      //printf("existe %s\n", disk.entries[i].file_name );
+    ptr = strstr(disk.entries[i]->file_name, filename);
+    if(strncmp(disk.entries[i]->file_name , filename, 32) ==0 ){
+      printf("existe %s\n", disk.entries[i]->file_name );
       return 1;
     }
+
+    if(ptr!=NULL){
+      printf("existe %s\n", disk.entries[i]->file_name );
+      return 1;
+    }
+
   }
-  //printf("no existe\n");
+
+  printf("no existe\n");
   return 0;
 }
+
+
 
 void create_dir_blocks()
 {
   //Directory * bloque[4];
-  Entry* entrada[256];
+  //Entry* entrada[256];
   Entry_aux entrada_aux;
 
   FILE* disk = fopen("simdiskfilled.bin", "r");
 
-  for(int i = 0;i < 256 ; i++){
-    entrada[i]= entry_init();
-  }
+  //for(int i = 0;i < 256 ; i++){
+  //  entrada[i]= entry_init();
+  //}
 
   for(int i = 0;i < 4 ; i++){
     Dir_disk[i]= malloc(sizeof(Directory));
@@ -64,21 +75,24 @@ void create_dir_blocks()
     fseek(disk, 536870912*f, SEEK_SET);
     for(int i = 0; i< 256;i++){
       fread(&entrada_aux, 32, 1, disk);
-      memcpy(entrada[i]->file_name, entrada_aux.file_name, 29);
-      directorio_append(Dir_disk[f], entrada[i], i);
+      Dir_disk[f]-> entries[i] = entry_init();
+      //memcpy(entrada[i]->file_name, entrada_aux.file_name, 29);
+      //memcpy(entrada[i]->number, entrada_aux.valid, 24);
+      //directorio_append(Dir_disk[f], entrada[i], i);
+      memcpy(Dir_disk[f]-> entries[i]->file_name, entrada_aux.file_name, 29);
+      memcpy(Dir_disk[f]-> entries[i]->number, entrada_aux.valid, 24);
     }
   }
-
   //printf("%s\n",Dir_disk[0]-> entries[0].file_name);
-  //cr_exists(*Dir_disk[0], "Baroque.mp3");
   //fseek(disk, 0, SEEK_END);
   //printf("%ld", ftell(disk));
-  for(int i = 0;i < 256 ; i++){
-    entrada[i]= entry_init();
-    free(entrada[i]->file_name);
-    free(entrada[i]);
-  }
+  //for(int i = 0;i < 256 ; i++){
+  //  entrada[i]= entry_init();
+  //  free(entrada[i]->file_name);
+  //  free(entrada[i]);
+  //}
 }
+
 //https://stackoverflow.com/questions/18327439/printing-binary-representation-of-a-char-in-c
 void print_bitmap_bin(Bitmap* bitmap_block, bool hex)
 {
@@ -116,6 +130,7 @@ void print_bitmap_bin(Bitmap* bitmap_block, bool hex)
 	printf("Bloques Libres: %d\n", libres);
 	printf("Bloques ocupados: %d\n", ocupados);
 }
+
 void cr_bitmap(unsigned disk, bool hex)
 {
 	if(disk == 0)
@@ -165,6 +180,11 @@ Bitmap* bitmap_init()
 
 void create_cr_bitmaps()
 {
+  for(int i = 0; i < 4; i++)
+	{
+		bitmaps[i] = bitmap_init();
+	}
+
 	FILE* disk = fopen("simdiskfilled.bin", "r");
 	for(int i = 0; i < 4; i++)
 	{
@@ -176,10 +196,7 @@ void create_cr_bitmaps()
 		free(mapp);
 	}
 	fclose(disk);
-	for(int i = 0; i < 4; i++)
-	{
-		bitmaps[i] = bitmap_init();
-	}
+
 }
 
 void destroy_bitmaps()
@@ -195,8 +212,9 @@ int main() {
 
   cr_mount("simdiskfilled.bin");
 	create_dir_blocks();
-	create_cr_bitmaps();
-	destroy_bitmaps();
+  cr_exists(*Dir_disk[3], "Baroque.mp3");
+	//create_cr_bitmaps();
+	//destroy_bitmaps();
   return 0;
 }
 
