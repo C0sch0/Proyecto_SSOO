@@ -33,9 +33,9 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
 }
 
 
+
 int cr_exists(Directory disk, char* filename)
 { char *ptr;
-
   char *str = malloc(sizeof(char)*29);
 
   for(int i = 0; i<256;i++){
@@ -63,7 +63,7 @@ int cr_exists(Directory disk, char* filename)
 
 void cr_ls(unsigned disk)
 {
-	Directory* disco = Dir_disk[disk];
+	Directory* disco = Dir_disk[disk-1];
 	for (int i =0; i< 256; i++)
 	{
 		Entry* entrada = disco->entries[i];
