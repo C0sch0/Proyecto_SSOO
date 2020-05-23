@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include<unistd.h>
+#include <math.h>
 #include <sys/types.h>
 #include "structs.h"
 
@@ -25,6 +26,42 @@ void cr_mount(char* diskname)
   ruta_archivo = diskname;
 }
 
+
+// https://gist.github.com/ryankshah/bf45790b968540cdabdeef702883ddbb modificada
+int * get_bloque(char * string) {
+    int count = 0;
+    int num_bloque = 0;
+    int stringLength = strlen(string);
+    int mask = 0x80; /* 10000000 */
+    int * bloque = malloc(sizeof(int)*24);
+
+    for(int i = 0; i < stringLength; i++) {
+        mask = 0x80;
+        char c = string[i];
+        int x = 0;
+        while(mask > 0) {
+            char n = (c & mask) > 0;
+            bloque[count] = (int) n;
+            //printf("%i\n", bloque[count]);
+            mask >>= 1; /* move the bit down */
+            count++;
+        }
+    }
+
+    // transformamos ahora los bit al numero de bloque
+    for(int k = 1; k < 24; k++){
+      // no consideramos el 0 ya que ese corresponde al valid bit
+      if(bloque[k] == 1){
+        num_bloque += pow(2,23-k);
+      }
+    }
+
+    free(bloque);
+    //printf("%d\n", num_bloque);
+    return num_bloque;
+}
+
+
 void directorio_append(Directory* bloque, Entry *entrada, int i)
 {
 
@@ -33,33 +70,36 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
 }
 
 int cr_exists(unsigned disk, char* filename)
-{ char *ptr;
-  char *str = malloc(sizeof(char)*29);
+{ char *particion;
+  char *nombre;
+  char *str = malloc(sizeof(char)*32);
+  int valid = 0;
 
   for(int i = 0; i<256;i++){
-  	//printf("%s\n",disk.entries[i]->file_name );
-    if(strncmp(Dir_disk[disk]->entries[i]->file_name , filename, 32) ==0 ){
-      printf("existe %s\n", Dir_disk[disk]->entries[i]->file_name );
+    if(strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 ){
+      printf("existe\n");
       return 1;
-    }
-    memcpy(str, Dir_disk[disk]->entries[i]->file_name, 29);
-    ptr = strtok(str,"/");
-    ptr = strtok(NULL,"/");
-    if(ptr!=NULL){
-      if(strncmp(ptr , filename, 32) ==0 ){
-        printf("existe %s\n", Dir_disk[disk]->entries[i]->file_name );
-        return 1;
+    }else{
+
+      memcpy(str, Dir_disk[disk-1]->entries[i]->file_name, 32);
+      particion = strtok(str,"/");
+      nombre = strtok(NULL,"/");
+      if(nombre!=NULL){
+        if(strncmp(nombre , filename, 32) ==0){
+          // llamo denuevo a la función y busco el nombre en la partición indicada
+          valid = cr_exists(atoi(particion), nombre);
+          if(valid == 1){
+          return 1;
+        }
       }
     }
   }
-
-  printf("no existe %s\n", filename);
-  free(str);
-
-  //printf("no existe\n");
-  return 0;
 }
 
+  free(str);
+  printf("no existe\n");
+  return 0;
+}
 
 
 
@@ -248,11 +288,135 @@ void create_cr_bitmaps()
 	}
 }
 
+
+crFILE* init_crfile(){
+  crFILE* file = malloc(sizeof(crFILE));
+
+  file -> file_name = malloc(sizeof(char)*29);
+  file -> valid = malloc(sizeof(char)*24);
+  file -> mode = malloc(sizeof(char));
+
+  // Donde estamos en el archivo
+  file -> estado = 0;
+  file -> dir = 0;
+
+  // falta inicializar el bloque indice
+
+  return file;
+
+}
+
+void destroy_crfile(crFILE*file){
+  free(file-> file_name);
+  free(file-> valid);
+  free(file-> mode);
+  free(file);
+}
+
+
+crFILE* cr_open(unsigned disk, char* filename, char *mode){
+
+  char *particion;
+  char *nombre;
+  char *str = malloc(sizeof(char)*32);
+  int prt;
+
+  FILE* disco = fopen(ruta_archivo, "r");
+
+  if(strncmp(mode , "r", 1) == 0){
+    int exist;
+    // Cheamos que exista el archivo
+    exist = cr_exists(disk, filename);
+    if(exist == 1){
+      // el archivo en el disco si existe creamos el crFILE
+      char *ptr;
+      crFILE* file;
+      file = init_crfile();
+
+      // ahora tengp que buscar el archivo
+      for(int i = 0; i<256;i++){
+
+          if(strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 ){
+            // si el nombre esta en la partición
+
+            // le doy a file los atributos del archivo
+            memcpy(file->file_name, Dir_disk[disk-1]->entries[i]->file_name, 29);
+            memcpy(file->valid, Dir_disk[disk-1]->entries[i]->number, 3);
+
+            // le cambio asigno el modo en el que se abrio
+            memcpy(file->mode, mode, 1);
+            //memcpy(file->dir, 0, 1);
+
+            break;
+          }
+          else{
+            // si el nombre no esta en la partición
+            memcpy(str, Dir_disk[disk-1]->entries[i]->file_name, 32);
+            particion = strtok(str,"/");
+            nombre = strtok(NULL,"/");
+
+            if(nombre!=NULL){
+              if(strncmp(nombre , filename, 32) == 0){
+                prt = atoi(particion);
+                for(int j = 0; j<256;j++){
+                  // buscamos en la particion
+                  if(strncmp(Dir_disk[prt-1]->entries[j]->file_name , filename, 32)==0){
+                    // obtengo el indice del archivo que indica la partición a la que pertence
+
+                    memcpy(file->file_name, Dir_disk[prt-1]->entries[j]->file_name, 29);
+                    memcpy(file->valid, Dir_disk[prt-1]->entries[j]->number, 3);
+
+                    memcpy(file->mode, mode, 1);
+
+                    // apunta a otro directorio
+                    //memcpy(file->dir, 1, 1);
+
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Cargamos en bloque indice del archivo a crFILE
+
+        // Buscamos el puntero al ruta_archivo--> decodificar valid del filename
+        char *st= malloc(sizeof(char)*3);
+        int n_bloque_indice;
+        char* indice = malloc(sizeof(char)*8192);
+
+        memcpy(st, file->valid, 3);
+        n_bloque_indice = get_bloque(st);
+        printf("%d\n", n_bloque_indice);
+
+        //seteamos el archivo en el bloque indice
+        fseek(disco, 8192 * n_bloque_indice , SEEK_SET);
+
+        // esto tenemos que decodificarlo a los bytes que correspondan por segnmento
+        fread(indice, 8192, 1, disco);
+
+        free(st);
+        free(indice);
+    }
+    else{
+      // exist es 0
+      printf("El archivo no existe\n");
+      }
+    }
+    else if(strncmp(mode , "w", 1) ==0){
+      printf("Mode escritura\n");
+    }
+
+free(str);
+}
+
 int main() {
   cr_mount("simdiskfilled.bin");
   create_dir_blocks();
   cr_exists(3, "Baroque.mp3");
   cr_ls(1);
+  cr_open(1, "Baroque.mp3","r");
   destroy_directories();
   return 0;
 }

@@ -28,7 +28,6 @@ typedef struct directory_entry_aux{
 } Entry_aux;
 
 
-
 /// estructura entrada directorio final-->tami
 typedef struct directory_entry{
   char *number;
@@ -51,3 +50,13 @@ typedef struct partition {
   Directory *directory_partition;
   Bitmap *bitmap_partition;
 } Partition;
+
+typedef struct cr_file {
+  char *file_name;
+  char *valid;
+  char *mode;
+  int  estado;
+  int  dir;
+  Index* indice;
+
+} crFILE;
