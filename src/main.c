@@ -102,7 +102,6 @@ int cr_exists(unsigned disk, char* filename)
 }
 
 
-
 void cr_ls(unsigned disk)
 {
 	Directory* disco = Dir_disk[disk-1];
