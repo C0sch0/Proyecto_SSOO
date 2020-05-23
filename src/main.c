@@ -268,25 +268,6 @@ void destroy_bitmaps()
 	}
 }
 
-void create_cr_bitmaps()
-{
-	FILE* disk = fopen("simdiskfilled.bin", "r");
-	for(int i = 0; i < 4; i++)
-	{
-		char* mapp = malloc(sizeof(char)*8192);
-		int hasta = 536870912*i + 8192;
-  	fseek(disk, hasta , SEEK_SET);
-  	fread(mapp, 8192, 1, disk);
-  	memcpy(bitmaps[i]->map, mapp, 8192);
-		free(mapp);
-	}
-	fclose(disk);
-	for(int i = 0; i < 4; i++)
-	{
-		bitmaps[i] = bitmap_init();
-	}
-}
-
 
 crFILE* init_crfile(){
   crFILE* file = malloc(sizeof(crFILE));
