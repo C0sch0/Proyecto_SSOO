@@ -10,7 +10,7 @@ typedef struct block_indirect_simple {
 
 
 typedef struct data {
-  char *content[1024]; // array del contenido del bloque
+  char *content; // array del contenido del bloque
 } Data_Block;
 
 
@@ -33,7 +33,6 @@ typedef struct directory_entry{
   char *number;
   char *file_name;
 } Entry;
-
 
 
 typedef struct block_directory {
