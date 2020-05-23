@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include "structs.h"
 
+
 char* ruta_archivo;
 Directory* Dir_disk[4];
 Bitmap* bitmaps[4];
@@ -19,6 +20,76 @@ Entry * entry_init()
   entrada->file_name = malloc(sizeof(char)*29);
   entrada->number = malloc(sizeof(char)*24);
   return entrada;
+}
+
+Data_Block * init_datablock(){
+  Data_Block * data = malloc(sizeof(Data_Block));
+  data -> content = malloc(sizeof(char)*8192);
+  return data;
+}
+
+Indirect * init_ind_simple(){
+  Indirect * indirect = malloc(sizeof(Indirect));
+  for(int i = 0; i < 2048 ; i++){
+    indirect -> indirect_blocks_data[i] = malloc(sizeof(int));
+  }
+  return indirect;
+}
+
+Index * init_indice(){
+  Index * indice = malloc(sizeof(Index));
+
+  indice -> indirect_simple = init_ind_simple();
+
+  for(int i = 0; i < 2044 ; i++){
+    indice -> blocks_data[i]= init_datablock();
+  }
+
+  return indice;
+}
+
+crFILE* init_crfile(){
+  crFILE* file = malloc(sizeof(crFILE));
+
+  file -> file_name = malloc(sizeof(char)*29);
+  file -> valid = malloc(sizeof(char)*24);
+  file -> mode = malloc(sizeof(char));
+  file -> indice = init_indice();
+
+  // Donde estamos en el archivo
+  file -> estado = 0;
+  file -> dir = 0;
+
+  return file;
+
+}
+
+void destroy_crfile(crFILE*file){
+  free(file-> file_name);
+  free(file-> valid);
+  free(file-> mode);
+  free(file);
+}
+
+void destroy_data(Data_Block * data){
+  free(data -> content);
+  free(data);
+}
+
+void destroy_ind_dir(Indirect * indirect){
+  for(int i = 0; i < 2048 ; i++){
+    free(indirect -> indirect_blocks_data[i]);
+  }
+  free(indirect);
+}
+
+void destroy_indice(Index * index){
+
+  free(index -> references);
+  free(index -> file_size);
+  //destroy_data(indice -> blocks_data);
+  //destroy_ind_dir(indice -> indirect_simple);
+  free(index);
 }
 
 void cr_mount(char* diskname)
@@ -61,10 +132,9 @@ int * get_bloque(char * string) {
     return num_bloque;
 }
 
-
+// No la estamos usando por ahora
 void directorio_append(Directory* bloque, Entry *entrada, int i)
 {
-
   bloque-> entries[i] = entry_init();
   memcpy(bloque-> entries[i]->file_name, entrada->file_name, 29);
 }
@@ -268,32 +338,6 @@ void destroy_bitmaps()
 	}
 }
 
-
-crFILE* init_crfile(){
-  crFILE* file = malloc(sizeof(crFILE));
-
-  file -> file_name = malloc(sizeof(char)*29);
-  file -> valid = malloc(sizeof(char)*24);
-  file -> mode = malloc(sizeof(char));
-
-  // Donde estamos en el archivo
-  file -> estado = 0;
-  file -> dir = 0;
-
-  // falta inicializar el bloque indice
-
-  return file;
-
-}
-
-void destroy_crfile(crFILE*file){
-  free(file-> file_name);
-  free(file-> valid);
-  free(file-> mode);
-  free(file);
-}
-
-
 crFILE* cr_open(unsigned disk, char* filename, char *mode){
 
   char *particion;
@@ -364,7 +408,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
         // Buscamos el puntero al ruta_archivo--> decodificar valid del filename
         char *st= malloc(sizeof(char)*3);
         int n_bloque_indice;
-        char* indice = malloc(sizeof(char)*8192);
+        char* indice_aux = malloc(sizeof(char)*8192);
 
         memcpy(st, file->valid, 3);
         n_bloque_indice = get_bloque(st);
@@ -374,10 +418,10 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
         fseek(disco, 8192 * n_bloque_indice , SEEK_SET);
 
         // esto tenemos que decodificarlo a los bytes que correspondan por segnmento
-        fread(indice, 8192, 1, disco);
+        fread(indice_aux, 8192, 1, disco);
 
         free(st);
-        free(indice);
+        free(indice_aux);
     }
     else{
       // exist es 0
@@ -394,7 +438,7 @@ free(str);
 int main() {
   cr_mount("simdiskfilled.bin");
   create_dir_blocks();
-  cr_exists(3, "Baroque.mp3");
+  cr_exists(1, "Baroque.mp3");
   cr_ls(1);
   cr_open(1, "Baroque.mp3","r");
   destroy_directories();
