@@ -5,20 +5,20 @@
 
 
 typedef struct block_indirect_simple {
-  unsigned int *indirect_blocks_data[2048]; //array de punteros a data blocks
+  unsigned int *indirect_blocks_data; //array de punteros a data blocks
 } Indirect;
 
 
 typedef struct data {
-  char *content[1024]; // array del contenido del bloque
+  unsigned int *content; // numero de bloque donde esta el contenido
 } Data_Block;
 
 
 typedef struct block_index {
   unsigned int references; //numero de hardlinks del archivo
   unsigned long file_size; //tamaño
-  Data_Block *blocks_data[2044]; //array de punteros a data blocks
-  Indirect *indirect_simple; //puntero a bloque de indireccionamiento simple
+  unsigned int *blocks_data; //array de punteros a data blocks
+  unsigned int indirect_simple; //puntero a bloque de indireccionamiento simple
 } Index;
 
 /// estructura entrada  directorio auxiliar-->tami
@@ -28,13 +28,11 @@ typedef struct directory_entry_aux{
 } Entry_aux;
 
 
-
 /// estructura entrada directorio final-->tami
 typedef struct directory_entry{
   char *number;
   char *file_name;
 } Entry;
-
 
 
 typedef struct block_directory {
@@ -51,3 +49,12 @@ typedef struct partition {
   Directory *directory_partition;
   Bitmap *bitmap_partition;
 } Partition;
+
+typedef struct cr_file {
+  char *file_name;
+  char *valid;
+  char *mode;
+  int  estado;
+  int  dir;
+  Index* indice;
+} crFILE;
