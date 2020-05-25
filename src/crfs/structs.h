@@ -54,6 +54,7 @@ typedef struct cr_file {
   char *file_name;
   char *valid;
   char *mode;
+  int n_b_indice;
   int  estado;
   int  dir;
   Index* indice;
