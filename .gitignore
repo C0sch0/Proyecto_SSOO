@@ -3,7 +3,6 @@
 gitignore.txt
 simdiskfilled.bin
 simdiskformat.bin
-/obj
+obj/
 .DS_Store
 crfs
-./crfs
