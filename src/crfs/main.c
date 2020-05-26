@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     printf("Disk not mounted");
     return 0;
   }
-  
+
   create_dir_blocks();
   create_cr_bitmaps();
   crFILE* arch = cr_open(4, "ABaroque.mp3","w");
@@ -25,16 +25,21 @@ int main(int argc, char *argv[]) {
   		printf("%ld\n", arch->indice->file_size);
   	}
   	printf("%d\n", arch->n_b_indice);
+
+    crFILE* prueba = cr_open(1, "Baroque.mp3","r");
+    char * buffer;
+    cr_read(prueba, buffer, 18000);
+
   	destroy_crfile(arch);
   	destroy_directories();
-  destroy_bitmaps();
-  
+    destroy_bitmaps();
+
 
   return 0;
   	}
   	destroy_directories();
-  destroy_bitmaps();
-  
+    destroy_bitmaps();
+
 
   return 0;
 

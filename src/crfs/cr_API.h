@@ -387,21 +387,21 @@ char* traducir_num_bloque(int num_bloque){
   char pormientras[3];
   int aux;
   int w = 0;
-  int a[24],i;     
-  for(i=0;num_bloque>0;i++)    
-  {    
-  a[i] = num_bloque%2;    
-  num_bloque = num_bloque/2;    
+  int a[24],i;
+  for(i=0;num_bloque>0;i++)
+  {
+  a[i] = num_bloque%2;
+  num_bloque = num_bloque/2;
   }
 
   int b[24];
   for(int y = 0; y< 24; y++)
   {
     b[y] = 0;
-  }   
-  for(i=i-1;i>=0;i--)    
-  {    
-  b[23 - i] = a[i];   
+  }
+  for(i=i-1;i>=0;i--)
+  {
+  b[23 - i] = a[i];
   }
   b[0] = 1;
   for(int r = 0; r < 3; r++){
@@ -412,7 +412,7 @@ char* traducir_num_bloque(int num_bloque){
         w += pow(2, q);
       }
     }
-    pormientras[r] = w; 
+    pormientras[r] = w;
   }
   memcpy(num_a_chars, &(pormientras), 3);
   return num_a_chars;
@@ -727,4 +727,56 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           return file;
         }
     }
+}
+
+
+int cr_read(crFILE* file_desc, void* buffer, int nbytes){
+
+  // si el modo no esta en read entonces no se leerá
+  if(strncmp(file_desc -> mode, "r", 32) != 0){
+    printf("El archivo no fue abierto en modo de lectura\n" );
+  }
+  else{
+    // si el modo esta correcto entoces procedemos a leer
+
+    FILE* disco = fopen(ruta_archivo, "r");
+
+    char* read_aux = malloc(sizeof(char)*8192);
+    char* buffer_aux = malloc(sizeof(char)*nbytes);
+    char* byte = malloc(sizeof(char));
+
+    // vemos en que bloque y byte quedamos leyendo
+    fseek(disco, file_desc -> indice-> blocks_data [file_desc -> bloque]*8192 + file_desc -> byte, SEEK_SET);
+
+    // obtenemos lo que queda por leer del bloque
+    fread(read_aux, 8192- (file_desc -> byte), 1, disco);
+
+    int byte_actual = file_desc -> byte;
+    int bloque_actual = file_desc -> bloque;
+
+    // nuestro for esta condicionado a la cantidad de bytes que queramos leer
+    // debo el primer bloque
+    for(int i = 0; i < nbytes; i++){
+
+      // el numero de posición va de 0 a 8192, si supero este numero debo irme a otro bloque a leer
+      if(byte_actual < 8192){
+        //printf("%c**\n", read_aux[byte_actual]);
+        memcpy(&buffer_aux [i], &read_aux[byte_actual], 1);
+        byte_actual++;
+      }
+      else{
+        // cuando esto pase debo "reiniciar" el contador en 0
+        printf("cambiamos de bloque al bloque:");
+        bloque_actual++;
+        byte_actual = 0;
+        printf("%i\n", file_desc -> indice-> blocks_data [bloque_actual]);
+        fseek(disco, file_desc -> indice-> blocks_data [bloque_actual]*8192 , SEEK_SET);
+        fread(read_aux, 8192, 1, disco);
+      }
+    }
+
+    // liberar read y byte me tira error
+
+    free(buffer_aux);
+  }
 }
