@@ -57,5 +57,7 @@ typedef struct cr_file {
   int n_b_indice;
   int  estado;
   int  dir;
+  int n_particion;
+  int bloques_ocupados;
   Index* indice;
 } crFILE;

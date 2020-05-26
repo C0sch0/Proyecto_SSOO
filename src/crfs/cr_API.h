@@ -323,6 +323,8 @@ crFILE* init_crfile(){
   // Donde estamos en el archivo
   file -> estado = 0;
   file -> dir = 0;
+  file-> bloques_ocupados = 0;
+  file->n_particion = 0;
   return file;
 }
 void destroy_indice(Index * index){
@@ -507,6 +509,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
             // le cambio asigno el modo en el que se abrio
             memcpy(file->mode, mode, 1);
             //memcpy(file->dir, 0, 1);
+            file->n_particion = disk;
             break;
           }
         else
@@ -530,6 +533,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
                   memcpy(file->file_name, Dir_disk[prt-1]->entries[j]->file_name, 29);
                   memcpy(file->valid, Dir_disk[prt-1]->entries[j]->number, 3);
                   memcpy(file->mode, mode, 1);
+                  file->n_particion = prt;
                   // apunta a otro directorio
                   //memcpy(file->dir, 1, 1);
                   break;
@@ -570,6 +574,9 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       	int q = 12+4*i;
       	memcpy(aux_ptr, &(indice_aux[q]), 4);
       	ind->blocks_data[i] = buscar_ref(aux_ptr);
+        if(ind->blocks_data[i] > 0){
+          file->bloques_ocupados ++;
+        }
       	free(aux_ptr);
       }
       char* aux_ind = malloc(sizeof(char)*4);
@@ -613,6 +620,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 		            memcpy(file->valid, Dir_disk[disk-1]->entries[i]->number, 3);
 		            // le cambio asigno el modo en el que se abrio
 		            memcpy(file->mode, mode, 1);
+                file->n_particion = disk;
 		            //memcpy(file->dir, 0, 1);
 		            break;
           		}
@@ -637,6 +645,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 				                    memcpy(file->file_name, Dir_disk[prt-1]->entries[j]->file_name, 29);
 				                    memcpy(file->valid, Dir_disk[prt-1]->entries[j]->number, 3);
 				                    memcpy(file->mode, mode, 1);
+                            file->n_particion = prt;
 				                    // apunta a otro directorio
                     				//memcpy(file->dir, 1, 1);
                     				break;
@@ -676,6 +685,9 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 	        	int q = 12+4*i;
 	        	memcpy(aux_ptr, &(indice_aux[q]), 4);
 	        	ind->blocks_data[i] = buscar_ref(aux_ptr);
+            if(ind->blocks_data[i] > 0){
+              file->bloques_ocupados ++;
+            }
 	        	free(aux_ptr);
         	}
        		 char* aux_ind = malloc(sizeof(char)*4);
@@ -693,7 +705,9 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       		// exist es 0
       		//tengo que buscarle espacio al bloque indice
           Bitmap* mapeo = bitmaps[disk-1];
-          int n_bloque = buscar_bloque_disponible(mapeo); //numero del primer bloque que esta disponible (numero relativo) y cambio en el bitmap el 0 por un 1 en ese bloque si hay bloques disponibles
+          //numero del primer bloque que esta disponible (numero relativo)
+          //Ademas cambio en el bitmap el 0 por un 1 en ese bloque (si hay bloques disponibles)
+          int n_bloque = buscar_bloque_disponible(mapeo); 
           if (n_bloque == 0)//no queda espacio
           {
             printf("No existe espacio en la particion\n");
@@ -702,29 +716,104 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
             return NULL;
           }
           Directory* directorio_actual = Dir_disk[disk-1];
+          //Busco la primera entrada vacia para llenarla con la info del archivo que estoy creando
           int new_entry = buscar_entry_disponible(directorio_actual);
-          if(new_entry == 0){
+          if(new_entry == 0){ //no quedan entradas
             printf("No quedan entradas disponibles en el directorio\n");
             free(str);
             fclose(disco);
             return NULL;
           }
+          //copio el nombre que me dan (filename)
           char* nombre_a_copiar = calloc(29, sizeof(char));
           memcpy(nombre_a_copiar, filename, 29);
+          //inicializo el archivo
           crFILE* file = init_crfile();
-          int n_bloque_abs = 65536*disk + n_bloque;
+          //calculo numero de bloque absoluto (en todo el disco)
+          int n_bloque_abs = 65536*(disk - 1) + n_bloque;
           file->n_b_indice = n_bloque_abs;
+          //paso del numero de bloque a los 3 char incluyendo bit validez = 1
           char* n_bloque_traducido = traducir_num_bloque(n_bloque_abs);
+          //copio la info tanto en el file como en el bloque directorio (entrada correspondiente)
           memcpy(file->file_name, nombre_a_copiar, 29);
           memcpy(Dir_disk[disk -1]->entries[new_entry]->file_name, nombre_a_copiar, 29);
           memcpy(file->valid, n_bloque_traducido, 3);
           memcpy(Dir_disk[disk -1]->entries[new_entry]->number, n_bloque_traducido, 3);
+          //libero la memoria de las variables auxiliares
           free(nombre_a_copiar);
           free(n_bloque_traducido);
+          //copio el modo del file a "w"
           memcpy(file->mode, mode, 1);
           free(str);
+          //cierro el disco
           fclose(disco);
           return file;
         }
     }
+}
+
+
+int cr_write(crFILE* file, void* buffer, int n_bytes){
+  //chequeo que el modo del archivo este ok
+  if(strncmp(file->mode, "w") == 0){
+    FILE* disco = fopen(ruta_archivo, "wb");
+    //caso 1: el archivo no esta vacio
+    if(file->file_size > 0){
+      //chequeo cuantos bloques de datos voy a necesitar dado los n_bytes
+      int resto = n_bytes % 8192;
+      int bloques_necesito;
+      if(resto > 0){
+        bloques_necesito = n_bytes/8192 + 1;
+      }
+      else{
+        bloques_necesito = n_bytes/8192;
+      }
+      //comparo los bloques que actualmente tengo ocupado con los que necesito
+      if(file->bloques_ocupados == bloques_necesito){
+        //es la misma cantidad -> solo escribo y dejo todo igual (a lo mejor actualizo el size del archivo)
+      }
+      else if(file->bloques_ocupados > bloques_necesito){
+        //tengo mas de los que necesito -> escribo, libero los restantes (bitmap y data_blocks), actualizo filesize
+      }
+      else{
+        //necesito mas de los que tengo -> busco en el bitmap bloques disponibles(de a uno), actualizo info y escribo 
+      }
+
+      
+    }
+    //caso 2: el archivo esta vacio
+    else{
+      //necesito ver cuantos bloques de datos ocupo con los n_bytes
+      int resto = n_bytes % 8192;
+      int bloques_necesito;
+      if(resto > 0){
+        bloques_necesito = n_bytes/8192 + 1;
+      }
+      else{
+        bloques_necesito = n_bytes/8192;
+      }
+      //busco en el bitmap de a uno los bloques, escribo en el, alfinal actualizo la info con lo que alcance a escribir
+      Bitmap* bitmap_actual = bitmaps[file->n_particion - 1];
+      int bloque_disp_rel;
+      int bloque_disp_abs;
+      (for int i = 0; i < bloques_necesito; i++){
+        bloque_disp_rel = buscar_bloque_disponible(bitmap_actual); //obtengo numero del primer bloque vacio (relativo)
+        bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
+        file->indice->blocks_data[i] = bloque_disp_abs; //lo guardo en el array de data_blocks 
+        //ahora escribo en ese bloque
+        //seteamos el archivo en el bloque
+        fseek(disco, 8192 * n_bloque_indice , SEEK_SET);
+
+
+
+
+
+      }
+    }
+  }
+  //modo no es de escritura
+  else{
+    printf("Error al tratar de escribir en un archivo abierto en modo lectura\n");
+    return 0;
+  }
 }
