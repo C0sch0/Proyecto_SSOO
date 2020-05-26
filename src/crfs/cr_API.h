@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "structs.h"
 
+
 char* ruta_archivo;
 Directory* Dir_disk[4];
 Bitmap* bitmaps[4];
@@ -28,7 +29,8 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
 }
 
 int cr_exists(unsigned disk, char* filename)
-{ char *particion;
+{
+  char *particion;
   char *nombre;
   char *str = malloc(sizeof(char)*32);
   int valid = 0;
