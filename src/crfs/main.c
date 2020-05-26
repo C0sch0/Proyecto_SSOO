@@ -31,15 +31,14 @@ int main(int argc, char *argv[]) {
     cr_read(prueba, buffer, 18000);
 
   	destroy_crfile(arch);
+    destroy_crfile(prueba);
   	destroy_directories();
     destroy_bitmaps();
-
 
   return 0;
   	}
   	destroy_directories();
     destroy_bitmaps();
-
 
   return 0;
 

@@ -387,21 +387,25 @@ char* traducir_num_bloque(int num_bloque){
   char pormientras[3];
   int aux;
   int w = 0;
-  int a[24],i;
-  for(i=0;num_bloque>0;i++)
-  {
-  a[i] = num_bloque%2;
-  num_bloque = num_bloque/2;
+
+  int a[24],i;     
+  for(i=0;num_bloque>0;i++)    
+  {    
+  a[i] = num_bloque%2;    
+  num_bloque = num_bloque/2;    
+
   }
 
   int b[24];
   for(int y = 0; y< 24; y++)
   {
     b[y] = 0;
-  }
-  for(i=i-1;i>=0;i--)
-  {
-  b[23 - i] = a[i];
+
+  }   
+  for(i=i-1;i>=0;i--)    
+  {    
+  b[23 - i] = a[i];   
+
   }
   b[0] = 1;
   for(int r = 0; r < 3; r++){
@@ -412,7 +416,9 @@ char* traducir_num_bloque(int num_bloque){
         w += pow(2, q);
       }
     }
-    pormientras[r] = w;
+
+    pormientras[r] = w; 
+
   }
   memcpy(num_a_chars, &(pormientras), 3);
   return num_a_chars;
