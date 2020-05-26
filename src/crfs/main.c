@@ -11,30 +11,32 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+
   cr_mount("simdiskfilled.bin");
   if (!ruta_archivo) {
     printf("Disk not mounted");
     return 0;
   }
-  
+
   create_dir_blocks();
   create_cr_bitmaps();
   crFILE* arch = cr_open(4, "ABaroque.mp3","w");
   if (arch!= NULL){
-  	if(arch->indice->file_size != NULL){
+  	if(arch->indice->file_size != NULL)
+    {
   		printf("%ld\n", arch->indice->file_size);
   	}
   	printf("%d\n", arch->n_b_indice);
   	destroy_crfile(arch);
   	destroy_directories();
   destroy_bitmaps();
-  
+
 
   return 0;
   	}
   	destroy_directories();
   destroy_bitmaps();
-  
+
 
   return 0;
 
