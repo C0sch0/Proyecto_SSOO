@@ -16,15 +16,28 @@ int main(int argc, char *argv[]) {
     printf("Disk not mounted");
     return 0;
   }
+  
   create_dir_blocks();
-  //cr_exists(1, "Baroque.mp3");
-  //cr_ls(1);
-  crFILE* arch = cr_open(3, "Program in C.mkv","r");
-  printf("%ld\n", arch->indice->file_size);
-  destroy_crfile(arch);
-  destroy_directories();
+  create_cr_bitmaps();
+  crFILE* arch = cr_open(4, "ABaroque.mp3","w");
+  if (arch!= NULL){
+  	if(arch->indice->file_size != NULL){
+  		printf("%ld\n", arch->indice->file_size);
+  	}
+  	printf("%d\n", arch->n_b_indice);
+  	destroy_crfile(arch);
+  	destroy_directories();
+  destroy_bitmaps();
+  
 
   return 0;
+  	}
+  	destroy_directories();
+  destroy_bitmaps();
+  
+
+  return 0;
+
 }
 
 // bloque directorio partición 1 parte en 0
