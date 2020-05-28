@@ -14,6 +14,8 @@ char* ruta_archivo;
 Directory* Dir_disk[4];
 Bitmap* bitmaps[4];
 
+// Inicializadores
+
 Entry * entry_init()
 {
   Entry* entrada = calloc(1, sizeof(Entry));
@@ -21,6 +23,51 @@ Entry * entry_init()
   entrada->number = malloc(sizeof(char)*3);
   return entrada;
 }
+
+Bitmap* bitmap_init()
+{
+	Bitmap *mapa = malloc(sizeof(Bitmap));
+	mapa->map = malloc(sizeof(char)*8192);
+	return mapa;
+}
+
+
+Data_Block* init_datablock()
+{
+  Data_Block* data = malloc(sizeof(Data_Block));
+  data -> content = malloc(sizeof(unsigned int));
+  return data;
+}
+
+Indirect* init_ind_simple()
+{
+  Indirect* indirect = malloc(sizeof(Indirect));
+  indirect -> indirect_blocks_data = malloc(sizeof(unsigned int)*2048);
+  return indirect;
+}
+
+Index* init_indice()
+{
+  Index* indice = malloc(sizeof(Index));
+  indice->blocks_data = malloc(sizeof(unsigned int)*2044);
+  return indice;
+}
+
+crFILE* init_crfile(){
+  crFILE* file = malloc(sizeof(crFILE));
+  file -> file_name = malloc(sizeof(char)*29);
+  file -> valid = calloc(3, sizeof(char));
+  file -> mode = malloc(sizeof(char));
+  file -> indice = init_indice();
+
+  // Donde estamos en el archivo
+  file -> estado = 0;
+  file -> dir = 0;
+  return file;
+}
+
+
+// Funciones
 
 void cr_mount(char* diskname)
 {
@@ -61,7 +108,6 @@ int cr_exists(unsigned disk, char* filename)
     }
   }
 }
-
   free(str);
   //printf("no existe\n");
   return 0;
@@ -81,6 +127,7 @@ void cr_ls(unsigned disk)
 		}
 	}
 }
+
 
 void create_dir_blocks()
 {
@@ -115,6 +162,7 @@ void create_dir_blocks()
   }
   return 0;
  }
+
 
 //https://stackoverflow.com/questions/18327439/printing-binary-representation-of-a-char-in-c
 void print_bitmap_bin(Bitmap* bitmap_block, bool hex)
@@ -225,12 +273,7 @@ void cr_bitmap(unsigned disk, bool hex)
 	}
 }
 
-Bitmap* bitmap_init()
-{
-	Bitmap *mapa = malloc(sizeof(Bitmap));
-	mapa->map = malloc(sizeof(char)*8192);
-	return mapa;
-}
+
 
 void create_cr_bitmaps()
 {
@@ -277,50 +320,6 @@ void destroy_bitmaps()
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-Data_Block* init_datablock()
-{
-  Data_Block* data = malloc(sizeof(Data_Block));
-  data -> content = malloc(sizeof(unsigned int));
-  return data;
-}
-
-Indirect* init_ind_simple()
-{
-  Indirect* indirect = malloc(sizeof(Indirect));
-  indirect -> indirect_blocks_data = malloc(sizeof(unsigned int)*2048);
-  return indirect;
-}
-
-Index* init_indice()
-{
-  Index* indice = malloc(sizeof(Index));
-  indice->blocks_data = malloc(sizeof(unsigned int)*2044);
-  return indice;
-}
-
-crFILE* init_crfile(){
-  crFILE* file = malloc(sizeof(crFILE));
-  file -> file_name = malloc(sizeof(char)*29);
-  file -> valid = calloc(3, sizeof(char));
-  file -> mode = malloc(sizeof(char));
-  file -> indice = init_indice();
-
-  // Donde estamos en el archivo
-  file -> estado = 0;
-  file -> dir = 0;
-  return file;
-}
 void destroy_indice(Index * index){
 	free(index->blocks_data);
   	free(index);
