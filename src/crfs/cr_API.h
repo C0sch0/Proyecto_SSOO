@@ -733,15 +733,15 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 
 int cr_read(crFILE* file_desc, void* buffer, int nbytes)
 {
-  // chequear modo read
-  if (!file_desc)
-  {
+  if (nbytes == 0) {
+    return 0
+  }
+  if (!file_desc){
     printf("Archivo no abierto correctamente\n" );
     return -1;
   }
 
-  if(strncmp(file_desc -> mode, "r", 32) != 0)
-  {
+  if(strncmp(file_desc -> mode, "r", 32) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
     return -1;
   }
@@ -767,12 +767,14 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   for(int i = 0; i < nbytes; i++){
 
     // el numero de posición va de 0 a 8192, si supero este numero debo irme a otro bloque a leer
-    if(byte_actual < BLOCK_BYTES){
+    if(byte_actual < BLOCK_BYTES)
+    {
       //printf("%c**\n", read_aux[byte_actual]);
       memcpy(&buffer_aux [i], &read_aux[byte_actual], 1);
       byte_actual++;
     }
-    else{
+    else
+    {
       // cuando esto pase debo "reiniciar" el contador en 0
       printf("cambiamos de bloque al bloque:");
       bloque_actual++;
@@ -780,7 +782,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
       printf("%i\n", file_desc -> indice-> blocks_data [bloque_actual]);
       fseek(disco, file_desc -> indice-> blocks_data [bloque_actual]*BLOCK_BYTES , SEEK_SET);
       fread(read_aux, BLOCK_BYTES, 1, disco);
-    }
+     }
   }
   // liberar read y byte me tira error
   free(buffer_aux);
