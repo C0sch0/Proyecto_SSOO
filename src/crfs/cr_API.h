@@ -157,7 +157,7 @@ void create_dir_blocks()
   {
     if(directorio->entries[i]->number[0] == 0)
     {
-      return i
+      return i;
     }
   }
   return 0;
@@ -734,7 +734,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 int cr_read(crFILE* file_desc, void* buffer, int nbytes)
 {
   if (nbytes == 0) {
-    return 0
+    return 0;
   }
   if (!file_desc){
     printf("Archivo no abierto correctamente\n" );
@@ -746,14 +746,14 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     return -1;
   }
 
-
   FILE* disco = fopen(ruta_archivo, "r");
   char* read_aux = malloc(sizeof(char)*BLOCK_BYTES);
   char* buffer_aux = malloc(sizeof(char)*nbytes);
   char* byte = malloc(sizeof(char));
 
   // vemos en que bloque y byte quedamos leyendo
-  fseek(disco, file_desc -> indice-> blocks_data [file_desc -> bloque]*BLOCK_BYTES
+  fseek(disco,
+    file_desc -> indice-> blocks_data[file_desc -> bloque]*BLOCK_BYTES
     + file_desc -> byte, SEEK_SET);
 
   // obtenemos lo que queda por leer del bloque
@@ -765,7 +765,6 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   // nuestro for esta condicionado a la cantidad de bytes que queramos leer
   // debo el primer bloque
   for(int i = 0; i < nbytes; i++){
-
     // el numero de posición va de 0 a 8192, si supero este numero debo irme a otro bloque a leer
     if(byte_actual < BLOCK_BYTES)
     {
@@ -784,6 +783,8 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
       fread(read_aux, BLOCK_BYTES, 1, disco);
      }
   }
+
   // liberar read y byte me tira error
   free(buffer_aux);
+  free(read_aux);
 }
