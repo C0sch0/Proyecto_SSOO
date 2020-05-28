@@ -8,7 +8,7 @@ Diego Iruretagoyena - 14619164
 
 Tamara Lues -
 
-Claudio Prieto -
+Claudio Prieto - 1664039J
 
 Funciones:
 
