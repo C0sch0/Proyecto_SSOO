@@ -6,16 +6,22 @@
 
 Funciones:
 
+
 void cr_mount(char* diskname).
+
 
 void cr_bitmap(unsigned disk, bool hex).
 
+
 int cr_exists(unsigned disk, char* filename)
+
 
 void cr_ls(unsigned disk).
 
 
-Manejo de archivos
+
+
+**Manejo de archivos**
 
 crFILE* cr_open(unsigned disk, char* filename, char mode).
 

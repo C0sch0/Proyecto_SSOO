@@ -749,7 +749,8 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   char* byte = malloc(sizeof(char));
 
   // vemos en que bloque y byte quedamos leyendo
-  fseek(disco, file_desc -> indice-> blocks_data [file_desc -> bloque]*8192 + file_desc -> byte, SEEK_SET);
+  fseek(disco, file_desc -> indice-> blocks_data [file_desc -> bloque]*8192
+    + file_desc -> byte, SEEK_SET);
 
   // obtenemos lo que queda por leer del bloque
   fread(read_aux, 8192- (file_desc -> byte), 1, disco);
