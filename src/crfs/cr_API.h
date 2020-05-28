@@ -283,12 +283,12 @@ void create_cr_bitmaps()
 	}
 
 	FILE* disk = fopen(ruta_archivo, "r");
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < PARTICIONES; i++)
 	{
 		char* mapp = malloc(sizeof(char)*BLOCK_BYTES);
 		int hasta = 536870912*i + BLOCK_BYTES;
   	fseek(disk, hasta , SEEK_SET);
-  	fread(mapp, 8192, 1, disk);
+  	fread(mapp, BLOCK_BYTES, 1, disk);
   	memcpy(bitmaps[i]->map, mapp, BLOCK_BYTES);
 		free(mapp);
 	}
@@ -555,7 +555,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       fseek(disco, BLOCK_BYTES * n_bloque_indice , SEEK_SET);
 
       // esto tenemos que decodificarlo a los bytes que correspondan por segnmento
-      fread(indice_aux, 8192, 1, disco);
+      fread(indice_aux, BLOCK_BYTES, 1, disco);
       Index* ind= file->indice;
       char* aux_ref = malloc(sizeof(char)*4);
       memcpy(aux_ref, indice_aux, 4);
