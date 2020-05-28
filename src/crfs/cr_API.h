@@ -5,6 +5,11 @@
 #include <math.h>
 #include "structs.h"
 
+#define PARTICIONES 4
+#define BLOCK_ENTRIES 256
+
+
+
 char* ruta_archivo;
 Directory* Dir_disk[4];
 Bitmap* bitmaps[4];
@@ -34,7 +39,7 @@ int cr_exists(unsigned disk, char* filename)
   char *str = malloc(sizeof(char)*32);
   int valid = 0;
 
-  for(int i = 0; i<256;i++){
+  for(int i = 0; i<BLOCK_ENTRIES;i++){
     if(strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 ){
       //printf("existe\n");
       free(str);
@@ -66,7 +71,7 @@ int cr_exists(unsigned disk, char* filename)
 void cr_ls(unsigned disk)
 {
 	Directory* disco = Dir_disk[disk-1];
-	for (int i =0; i< 256; i++)
+	for (int i =0; i< BLOCK_ENTRIES; i++)
 	{
 		Entry* entrada = disco->entries[i];
 		int a = !!((entrada->number[0] << 1) & 0x800000);
@@ -88,7 +93,7 @@ void create_dir_blocks()
   for(int f = 0; f < 4 ; f++)
   {
     fseek(disk, 536870912*f, SEEK_SET);
-    for(int i = 0; i< 256;i++)
+    for(int i = 0; i< BLOCK_ENTRIES;i++)
     {
       fread(&entrada_aux, 32, 1, disk);
       Dir_disk[f]-> entries[i] = entry_init();
@@ -102,7 +107,7 @@ void create_dir_blocks()
  int buscar_entry_disponible(Directory* directorio)
  {
   int a = -1;
-  for (int i = 0; i < 256; i ++)
+  for (int i = 0; i < BLOCK_ENTRIES; i ++)
   {
     if(directorio->entries[i]->number[0] == 0)
     {
@@ -259,9 +264,9 @@ void create_cr_bitmaps()
 
 void destroy_directories()
 {
-	for(int i = 0; i <4; i++)
+	for(int i = 0; i < PARTICIONES; i++)
 	{
-		for(int j = 0; j< 256; j++)
+		for(int j = 0; j< BLOCK_ENTRIES; j++)
 			{
 				free(Dir_disk[i]->entries[j]->file_name);
 				free(Dir_disk[i]->entries[j]->number);
@@ -502,7 +507,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       file = init_crfile();
 
       // ahora tengp que buscar el archivo
-      for(int i = 0; i<256;i++)
+      for(int i = 0; i<BLOCK_ENTRIES;i++)
       {
       	if(strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 )
       	{
@@ -527,7 +532,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
             if(strncmp(nombre , filename, 32) == 0)
             {
               prt = atoi(particion);
-              for(int j = 0; j<256;j++)
+              for(int j = 0; j<BLOCK_ENTRIES;j++)
               {
                 // buscamos en la particion
                 if(strncmp(Dir_disk[prt-1]->entries[j]->file_name , filename, 32)==0)
@@ -609,7 +614,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       		file = init_crfile();
 
       		// ahora tengp que buscar el archivo
-      		for(int i = 0; i<256;i++)
+      		for(int i = 0; i<BLOCK_ENTRIES;i++)
       		{
       			if(strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 )
       			{
@@ -634,7 +639,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 		            	if(strncmp(nombre , filename, 32) == 0)
 		              	{
 		                	prt = atoi(particion);
-		                	for(int j = 0; j<256;j++)
+		                	for(int j = 0; j<BLOCK_ENTRIES;j++)
 		                	{
 		                  		// buscamos en la particion
 		                  		if(strncmp(Dir_disk[prt-1]->entries[j]->file_name , filename, 32)==0)
