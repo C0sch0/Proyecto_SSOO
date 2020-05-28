@@ -111,18 +111,10 @@ void create_dir_blocks()
   {
     if(directorio->entries[i]->number[0] == 0)
     {
-      a = i;
-      break;
+      return i
     }
   }
-  if(a == -1)
-  {
-    return 0;
-  }
-  else
-  {
-    return a;
-  }
+  return 0;
  }
 
 //https://stackoverflow.com/questions/18327439/printing-binary-representation-of-a-char-in-c
