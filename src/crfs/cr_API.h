@@ -736,15 +736,14 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 }
 
 
-int cr_read(crFILE* file_desc, void* buffer, int nbytes){
-
-  // si el modo no esta en read entonces no se leerá
+int cr_read(crFILE* file_desc, void* buffer, int nbytes)
+{
+  // chequear modo read
   if(strncmp(file_desc -> mode, "r", 32) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
     return -1;
   }
   FILE* disco = fopen(ruta_archivo, "r");
-
   char* read_aux = malloc(sizeof(char)*8192);
   char* buffer_aux = malloc(sizeof(char)*nbytes);
   char* byte = malloc(sizeof(char));
@@ -778,8 +777,6 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes){
       fread(read_aux, 8192, 1, disco);
     }
   }
-
   // liberar read y byte me tira error
-
   free(buffer_aux);
 }
