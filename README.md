@@ -1,8 +1,14 @@
 # Proyecto_SSOO
 
+Integrantes
 
+Antonia Christensen - 15636682
 
+Diego Iruretagoyena - 14619164
 
+Tamara Lues -
+
+Claudio Prieto -
 
 Funciones:
 
