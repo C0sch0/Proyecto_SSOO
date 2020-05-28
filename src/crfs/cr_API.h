@@ -106,7 +106,6 @@ void create_dir_blocks()
 
  int buscar_entry_disponible(Directory* directorio)
  {
-  int a = -1;
   for (int i = 0; i < BLOCK_ENTRIES; i ++)
   {
     if(directorio->entries[i]->number[0] == 0)
