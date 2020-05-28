@@ -786,7 +786,10 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
      }
   }
 
-  memcpy(buffer, buffer_aux, efectivamente_leidos);
+  for (int i = 0; i < efectivamente_leidos; i++)
+  {
+    ((unsigned char *)buffer)[i] = buffer_aux[i];
+  }
   printf("%s\n", buffer);
   printf("efectivamente_leidos : %d\n", efectivamente_leidos);
   free(buffer_aux);
