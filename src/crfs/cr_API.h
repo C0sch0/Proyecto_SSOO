@@ -738,18 +738,19 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   }
   if (!file_desc){
     printf("Archivo no abierto correctamente\n" );
-    return -1;
+    return 0;
   }
 
   if(strncmp(file_desc -> mode, "r", 32) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
-    return -1;
+    return 0;
   }
 
   FILE* disco = fopen(ruta_archivo, "r");
   char* read_aux = malloc(sizeof(char)*BLOCK_BYTES);
   char* buffer_aux = malloc(sizeof(char)*nbytes);
   char* byte = malloc(sizeof(char));
+  int efectivamente_leidos = 0;
 
   // vemos en que bloque y byte quedamos leyendo
   fseek(disco,
@@ -771,6 +772,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
       //printf("%c**\n", read_aux[byte_actual]);
       memcpy(&buffer_aux [i], &read_aux[byte_actual], 1);
       byte_actual++;
+      efectivamente_leidos++;
     }
     else
     {
@@ -784,7 +786,10 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
      }
   }
 
-  // liberar read y byte me tira error
+  memcpy(buffer, buffer_aux, efectivamente_leidos);
+  printf("%s\n", buffer);
+  printf("efectivamente_leidos : %d\n", efectivamente_leidos);
   free(buffer_aux);
   free(read_aux);
+  return efectivamente_leidos;
 }

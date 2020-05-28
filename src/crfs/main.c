@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   	printf("%d\n", arch->n_b_indice);
 
     crFILE* prueba = cr_open(1, "Baroque.mp3","r");
-    char * buffer;
+    char * buffer = malloc(sizeof(char)*18000);;
     cr_read(prueba, buffer, 18000);
 
   	destroy_crfile(arch);
