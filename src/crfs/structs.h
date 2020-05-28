@@ -19,6 +19,7 @@ typedef struct block_index {
   unsigned long file_size; //tamaño
   unsigned int *blocks_data; //array de punteros a data blocks
   unsigned int indirect_simple; //puntero a bloque de indireccionamiento simple
+  Indirect* bloque_indireccion;
 } Index;
 
 /// estructura entrada  directorio auxiliar-->tami
@@ -59,5 +60,7 @@ typedef struct cr_file {
   int  dir;
   int byte;
   int bloque;
+  int n_particion;
+  int bloques_ocupados;
   Index* indice;
 } crFILE;
