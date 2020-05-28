@@ -739,6 +739,11 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
 int cr_read(crFILE* file_desc, void* buffer, int nbytes)
 {
   // chequear modo read
+  if (!file_desc)
+  {
+    printf("Archivo no abierto correctamente\n" );
+    return -1;
+  }
   if(strncmp(file_desc -> mode, "r", 32) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
     return -1;
