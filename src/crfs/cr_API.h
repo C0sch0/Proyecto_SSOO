@@ -7,7 +7,7 @@
 
 #define PARTICIONES 4
 #define BLOCK_ENTRIES 256
-
+#define BLOCK_BYTES 8192
 
 
 char* ruta_archivo;
@@ -27,7 +27,7 @@ Entry * entry_init()
 Bitmap* bitmap_init()
 {
 	Bitmap *mapa = malloc(sizeof(Bitmap));
-	mapa->map = malloc(sizeof(char)*8192);
+	mapa->map = malloc(sizeof(char)*BLOCK_BYTES);
 	return mapa;
 }
 
@@ -169,7 +169,7 @@ void print_bitmap_bin(Bitmap* bitmap_block, bool hex)
 {
 	int libres = 0;
 	int ocupados = 0;
-	for (int j =1; j <= 8192; j++)
+	for (int j =1; j <= BLOCK_BYTES; j++)
 	{
 		for (int i = 0; i < 8; i++)
 		{
@@ -207,7 +207,7 @@ int buscar_bloque_disponible(Bitmap* bitmap){
   int b;
   int encontre = 0;
   int num_bloque_relat = 0;
-  for (int i = 0; i< 8192; i++)
+  for (int i = 0; i< BLOCK_BYTES; i++)
   {
     for (int j = 0; j < 8; j++)
     {
@@ -285,11 +285,11 @@ void create_cr_bitmaps()
 	FILE* disk = fopen(ruta_archivo, "r");
 	for(int i = 0; i < 4; i++)
 	{
-		char* mapp = malloc(sizeof(char)*8192);
-		int hasta = 536870912*i + 8192;
+		char* mapp = malloc(sizeof(char)*BLOCK_BYTES);
+		int hasta = 536870912*i + BLOCK_BYTES;
   	fseek(disk, hasta , SEEK_SET);
   	fread(mapp, 8192, 1, disk);
-  	memcpy(bitmaps[i]->map, mapp, 8192);
+  	memcpy(bitmaps[i]->map, mapp, BLOCK_BYTES);
 		free(mapp);
 	}
 	fclose(disk);
@@ -545,14 +545,14 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       // Buscamos el puntero al ruta_archivo--> decodificar valid del filename
       char *st= malloc(sizeof(char)*3);
       int n_bloque_indice;
-      char* indice_aux = malloc(sizeof(char)*8192);
+      char* indice_aux = malloc(sizeof(char)*BLOCK_BYTES);
 
       memcpy(st, file->valid, 3);
       n_bloque_indice = get_bloque(st);
       file->n_b_indice = n_bloque_indice;
 
       //seteamos el archivo en el bloque indice
-      fseek(disco, 8192 * n_bloque_indice , SEEK_SET);
+      fseek(disco, BLOCK_BYTES * n_bloque_indice , SEEK_SET);
 
       // esto tenemos que decodificarlo a los bytes que correspondan por segnmento
       fread(indice_aux, 8192, 1, disco);
@@ -652,16 +652,16 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
        		// Buscamos el puntero al ruta_archivo--> decodificar valid del filename
 	        char *st= malloc(sizeof(char)*3);
 	        int n_bloque_indice;
-	        char* indice_aux = malloc(sizeof(char)*8192);
+	        char* indice_aux = malloc(sizeof(char)*BLOCK_BYTES);
 	        memcpy(st, file->valid, 3);
 	        n_bloque_indice = get_bloque(st);
           file->n_b_indice = n_bloque_indice;
 
 	        //seteamos el archivo en el bloque indice
-	        fseek(disco, 8192 * n_bloque_indice , SEEK_SET);
+	        fseek(disco, BLOCK_BYTES * n_bloque_indice , SEEK_SET);
 
 	        // esto tenemos que decodificarlo a los bytes que correspondan por segnmento
-	        fread(indice_aux, 8192, 1, disco);
+	        fread(indice_aux, BLOCK_BYTES, 1, disco);
 	        Index* ind= file->indice;
 	        char* aux_ref = malloc(sizeof(char)*4);
 	        memcpy(aux_ref, indice_aux, 4);
@@ -739,21 +739,25 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     printf("Archivo no abierto correctamente\n" );
     return -1;
   }
-  if(strncmp(file_desc -> mode, "r", 32) != 0){
+
+  if(strncmp(file_desc -> mode, "r", 32) != 0)
+  {
     printf("El archivo no fue abierto en modo de lectura\n" );
     return -1;
   }
+
+
   FILE* disco = fopen(ruta_archivo, "r");
-  char* read_aux = malloc(sizeof(char)*8192);
+  char* read_aux = malloc(sizeof(char)*BLOCK_BYTES);
   char* buffer_aux = malloc(sizeof(char)*nbytes);
   char* byte = malloc(sizeof(char));
 
   // vemos en que bloque y byte quedamos leyendo
-  fseek(disco, file_desc -> indice-> blocks_data [file_desc -> bloque]*8192
+  fseek(disco, file_desc -> indice-> blocks_data [file_desc -> bloque]*BLOCK_BYTES
     + file_desc -> byte, SEEK_SET);
 
   // obtenemos lo que queda por leer del bloque
-  fread(read_aux, 8192- (file_desc -> byte), 1, disco);
+  fread(read_aux, BLOCK_BYTES - (file_desc -> byte), 1, disco);
 
   int byte_actual = file_desc -> byte;
   int bloque_actual = file_desc -> bloque;
@@ -763,7 +767,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   for(int i = 0; i < nbytes; i++){
 
     // el numero de posición va de 0 a 8192, si supero este numero debo irme a otro bloque a leer
-    if(byte_actual < 8192){
+    if(byte_actual < BLOCK_BYTES){
       //printf("%c**\n", read_aux[byte_actual]);
       memcpy(&buffer_aux [i], &read_aux[byte_actual], 1);
       byte_actual++;
@@ -774,8 +778,8 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
       bloque_actual++;
       byte_actual = 0;
       printf("%i\n", file_desc -> indice-> blocks_data [bloque_actual]);
-      fseek(disco, file_desc -> indice-> blocks_data [bloque_actual]*8192 , SEEK_SET);
-      fread(read_aux, 8192, 1, disco);
+      fseek(disco, file_desc -> indice-> blocks_data [bloque_actual]*BLOCK_BYTES , SEEK_SET);
+      fread(read_aux, BLOCK_BYTES, 1, disco);
     }
   }
   // liberar read y byte me tira error
