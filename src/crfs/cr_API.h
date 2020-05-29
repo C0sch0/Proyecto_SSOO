@@ -327,10 +327,18 @@ void destroy_indice(Index * index){
   	free(index);
 }
 
+void destroy_indirect_simple(Indirect* indirect_simple){
+  free(indirect_simple -> indirect_blocks_data);
+  free(indirect_simple);
+}
+
 void destroy_crfile(crFILE*file){
   free(file-> file_name);
   free(file-> valid);
   free(file-> mode);
+  if(file->indice->indirect_simple > 0){
+    destroy_indirect_simple(file->indice->bloque_indireccion);
+  }
   destroy_indice(file->indice);
   free(file);
 }
@@ -340,10 +348,7 @@ void destroy_data(Data_Block * data){
   free(data);
 }
 
-void destroy_indirect_simple(Indirect* indirect_simple){
-  free(indirect_simple -> indirect_blocks_data);
-  free(indirect_simple);
-}
+
 
 // https://gist.github.com/ryankshah/bf45790b968540cdabdeef702883ddbb modificada
 int get_bloque(char* string) {
@@ -577,21 +582,65 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       memcpy(aux_size, &(indice_aux[4]), 8);
       ind->file_size = buscar_size(aux_size);
       free(aux_size);
-      for (int i = 0; i < 2044; i++)
-      {
-        char* aux_ptr = malloc(sizeof(char)*4);
-        int q = 12+4*i;
-        memcpy(aux_ptr, &(indice_aux[q]), 4);
-        ind->blocks_data[i] = buscar_ref(aux_ptr);
-        if(ind->blocks_data[i] > 0){
-          file->bloques_ocupados ++;
-        }
-        free(aux_ptr);
+      int resto = ind->file_size % BLOCK_BYTES;
+      int blocks_ocup;
+      if(resto > 0){
+        blocks_ocup = ind->file_size/BLOCK_BYTES + 1;
       }
-      char* aux_ind = malloc(sizeof(char)*4);
-      memcpy(aux_ind, &(indice_aux[8188]), 4);
-      ind->indirect_simple = buscar_ref(aux_ind);
-      free(aux_ind);
+      else{
+        blocks_ocup= ind->file_size/BLOCK_BYTES;
+      }
+      if(blocks_ocup <= 2044){
+        printf("menos de 2044\n");
+        printf("los bloques de datos deberian ser: %d\n", blocks_ocup);
+        for (int i = 0; i < blocks_ocup; i++)
+        {
+          char* aux_ptr = malloc(sizeof(char)*4);
+          int q = 12+4*i;
+          memcpy(aux_ptr, &(indice_aux[q]), 4);
+          ind->blocks_data[i] = buscar_ref(aux_ptr);
+          printf("i=%d puntero=%d\n", i, ind->blocks_data[i]);
+          file->bloques_ocupados ++;
+          free(aux_ptr);
+        }
+        ind->indirect_simple = 0;
+      }
+      else{
+        printf("mas de 2044\n");
+        printf("los bloques de datos deberian ser: %d\n", blocks_ocup);
+        for (int i = 0; i < 2044; i++)
+        {
+          char* aux_ptr = malloc(sizeof(char)*4);
+          int q = 12+4*i;
+          memcpy(aux_ptr, &(indice_aux[q]), 4);
+          ind->blocks_data[i] = buscar_ref(aux_ptr);
+          printf("i=%d puntero=%d\n", i, ind->blocks_data[i]);
+          file->bloques_ocupados ++;
+          free(aux_ptr);
+        }
+        char* aux_ind = malloc(sizeof(char)*4);
+        memcpy(aux_ind, &(indice_aux[8188]), 4);
+        ind->indirect_simple = buscar_ref(aux_ind);
+        printf("bloque de indireccion = %d\n", ind->indirect_simple);
+        //seteamos el archivo en el bloque indireccionamiento simple
+        fseek(disco, BLOCK_BYTES * ind->indirect_simple , SEEK_SET);
+        char* indireccionamiento = malloc(sizeof(char)*BLOCK_BYTES);
+        fread(indireccionamiento, BLOCK_BYTES, 1, disco);
+        ind->bloque_indireccion = init_ind_simple();
+        int bloques_i = blocks_ocup - 2044;
+        for (int i = 0; i < bloques_i; i++)
+        {
+          char* aux_ptr = malloc(sizeof(char)*4);
+          memcpy(aux_ptr, &(indireccionamiento[4*i]), 4);
+          ind-> bloque_indireccion->indirect_blocks_data[i] = buscar_ref(aux_ptr);
+          printf("i=%d puntero=%d\n", i, ind-> bloque_indireccion->indirect_blocks_data[i]);
+          file->bloques_ocupados ++;
+          free(aux_ptr);
+        }
+        free(indireccionamiento);
+        free(aux_ind);
+
+      }
       free(st);
       free(str);
       free(indice_aux);
@@ -901,3 +950,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
     return 0;
   }
 }
+
+
+
+
+
+
+
+
