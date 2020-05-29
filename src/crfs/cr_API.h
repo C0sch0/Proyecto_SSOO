@@ -627,7 +627,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           Bitmap* mapeo = bitmaps[disk-1];
           //numero del primer bloque que esta disponible (numero relativo)
           //Ademas cambio en el bitmap el 0 por un 1 en ese bloque (si hay bloques disponibles)
-          int n_bloque = buscar_bloque_disponible(mapeo); 
+          int n_bloque = buscar_bloque_disponible(mapeo);
           if (n_bloque == 0)//no queda espacio
           {
             printf("No existe espacio en la particion\n");
@@ -760,7 +760,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
       int bloque_disp_rel;
       int bloque_disp_abs;
       int voy_bloque = 0;
-      int llevo_bytes = 0; 
+      int llevo_bytes = 0;
       for(int i = 0; i < bloques_necesito; i++){
         bloque_disp_rel = buscar_bloque_disponible(bitmap_actual); //obtengo numero del primer bloque vacio (relativo)
         if(bloque_disp_rel == 0){
@@ -807,7 +807,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
       int bloque_disp_rel;
       int bloque_disp_abs;
       int voy_bloque = 0;
-      int llevo_bytes = 0; 
+      int llevo_bytes = 0;
       for(int i = 0; i < 2044; i++){
         bloque_disp_rel = buscar_bloque_disponible(bitmap_actual); //obtengo numero del primer bloque vacio (relativo)
         if(bloque_disp_rel == 0){
@@ -893,11 +893,21 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           }
         }
       }
-    } 
+    }
   }
   //modo no es de escritura
   else{
     printf("Error al tratar de escribir en un archivo abierto en modo lectura\n");
     return 0;
   }
+}
+
+
+int cr_close(crFILE* file_desc){
+  free(file_desc-> file_name);
+  free(file_desc-> valid);
+  free(file_desc-> mode);
+  destroy_indice(file_desc->indice);
+  free(file_desc);
+  return 1;
 }

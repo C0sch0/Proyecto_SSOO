@@ -27,21 +27,14 @@ int main(int argc, char *argv[]) {
   		printf("%ld\n", arch->indice->file_size);
   	}
   	printf("%d\n", arch->n_b_indice);
-
     crFILE* prueba = cr_open(1, "Baroque.mp3","r");
     char * buffer = malloc(sizeof(char)*18000);;
     cr_read(prueba, buffer, 18000);
-
-  	destroy_crfile(arch);
-    destroy_crfile(prueba);
-  	destroy_directories();
-    destroy_bitmaps();
-
-  return 0;
+  	cr_close(arch);
+    cr_close(prueba);
   }
-  	destroy_directories();
-    destroy_bitmaps();
-
+  destroy_directories();
+  destroy_bitmaps();
   return 0;
 
 }
