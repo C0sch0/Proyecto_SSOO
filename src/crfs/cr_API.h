@@ -327,14 +327,6 @@ void destroy_indice(Index * index){
   	free(index);
 }
 
-void destroy_crfile(crFILE*file){
-  free(file-> file_name);
-  free(file-> valid);
-  free(file-> mode);
-  destroy_indice(file->indice);
-  free(file);
-}
-
 void destroy_data(Data_Block * data){
   free(data -> content);
   free(data);
@@ -549,7 +541,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           printf("ERROR: el archivo que trata de abrir es un broken link\n");
           free(str);
           fclose(disco);
-          destroy_crfile(file);
+          cr_close(file);
           return NULL;
         }
       }
