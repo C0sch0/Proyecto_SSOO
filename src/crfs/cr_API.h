@@ -731,6 +731,8 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   return efectivamente_leidos;
 }
 
+
+
 int cr_write(crFILE* file, void* buffer, int n_bytes){
   //chequeo que el modo del archivo este ok
   if(strncmp(file->mode, "w", 1) == 0)
@@ -738,6 +740,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
     FILE* disco = fopen(ruta_archivo, "rb+");
     //necesito ver cuantos bloques de datos ocupo con los n_bytes
     int resto = n_bytes % BLOCK_BYTES;
+
+    char* buffer_aux = malloc(sizeof(char)*8192);
+
     int bloques_necesito;
     if(resto > 0){
       bloques_necesito = n_bytes/BLOCK_BYTES + 1;
@@ -768,8 +773,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         if(bloques_necesito - voy_bloque == 0 && resto > 0){ //estoy en el ultimo bloque y escribo la cantidad de bytes = resto
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+
           //escribo los bytes_restantes(resto)
-          //fwrite();
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), resto);
+          fwrite(buffer_aux, 1, resto, disco);
+
           llevo_bytes += resto;
           file->indice->file_size = llevo_bytes;
           return llevo_bytes;
@@ -778,7 +786,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
           //escribo los 8192 bytes restantes
-          //fwrite();
+
+          //escribo los bytes_restantes(resto)
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+
           llevo_bytes += BLOCK_BYTES;
           file->indice->file_size = llevo_bytes;
           return llevo_bytes;
@@ -786,10 +798,15 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         else if(bloques_necesito > voy_bloque){
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+
           //escribo los 8192 bytes restantes
-          //fwrite();
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+
           llevo_bytes += BLOCK_BYTES;
         }
+
+        free(buffer_aux);
       }
     }
 
@@ -815,8 +832,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         if(bloques_necesito > voy_bloque){
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+
           //escribo los 8192 bytes restantes
-          //fwrite();
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+
           llevo_bytes += BLOCK_BYTES;
         }
       }
@@ -849,8 +869,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         if(bloques_ind_sim - voy_3_bloque == 0 && resto > 0){ //estoy en el ultimo bloque y escribo la cantidad de bytes = resto
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+
           //escribo los bytes_restantes(resto)
-          //fwrite();
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), resto);
+          fwrite(buffer_aux, 1, resto, disco);
+
           llevo_bytes += resto;
           file->indice->file_size = llevo_bytes;
           return llevo_bytes;
@@ -858,8 +881,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         else if(bloques_ind_sim - voy_3_bloque == 0 && resto == 0){//estoy en el ultimo bloque y escribo 8192 bytes.
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+
           //escribo los 8192 bytes restantes
-          //fwrite();
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+
           llevo_bytes += BLOCK_BYTES;
           file->indice->file_size = llevo_bytes;
           return llevo_bytes;
@@ -867,8 +893,11 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         else if(bloques_ind_sim > voy_3_bloque){
           //seteamos el archivo en el bloque
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+
           //escribo los 8192 bytes restantes
-          //fwrite();
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+
           llevo_bytes += BLOCK_BYTES;
           if(voy_3_bloque == 2048){
             //estoy en el ultimo bloque del bloque de indireccionamiento simple
