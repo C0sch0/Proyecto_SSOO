@@ -19,20 +19,31 @@ int main(int argc, char *argv[]) {
 
   create_dir_blocks();
   create_cr_bitmaps();
-  crFILE* arch = cr_open(4, "ABaroque.mp3","w");
-  if (arch!= NULL)
-  {
-  	if(arch->indice->file_size != NULL)
-    {
-  		printf("%ld\n", arch->indice->file_size);
-  	}
-  	printf("%d\n", arch->n_b_indice);
-    crFILE* prueba = cr_open(1, "Baroque.mp3","r");
-    char * buffer = malloc(sizeof(char)*18000);;
-    cr_read(prueba, buffer, 18000);
-  	cr_close(arch);
-    cr_close(prueba);
-  }
+  //cr_bitmap(4, 0);
+  // cr_ls(4);
+  crFILE* arch = cr_open(4, "Aprobando123.mp3","w");
+  FILE* prueba = fopen("prueba.txt", "r");
+  char* texto = calloc(10000, sizeof(char));
+  fgets(texto, 10000, prueba);
+  int num = cr_write(arch, texto, 10000);
+  printf("num = %d\n", num);
+  //destroy_directories();
+  // destroy_bitmaps();
+  // create_dir_blocks();
+  // create_cr_bitmaps();
+  // cr_ls(4);
+  free(texto);
+  fclose(prueba);
+  cr_close(arch);
+  crFILE* arch2 = cr_open(4, "Aprobando123.mp3","r");
+  cr_close(arch2);
+  // FILE* prueba_2 = fopen("simdiskfilled.bin", "r");
+  // char* texto2 = calloc(10000, sizeof(char));
+  // fseek(prueba_2, 196611*8192, SEEK_SET);
+  // fgets(texto2, 10000, prueba_2);
+  // fclose(prueba_2);
+  // printf("%s\n", texto2);
+  // free(texto2);
   destroy_directories();
   destroy_bitmaps();
   return 0;
