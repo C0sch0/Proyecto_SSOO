@@ -775,7 +775,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
           //escribo los bytes_restantes(resto)
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), resto);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), resto);
           fwrite(buffer_aux, 1, resto, disco);
 
           llevo_bytes += resto;
@@ -788,7 +788,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           //escribo los 8192 bytes restantes
 
           //escribo los bytes_restantes(resto)
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
           fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
           llevo_bytes += BLOCK_BYTES;
@@ -800,7 +800,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
           //escribo los 8192 bytes restantes
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
           fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
           llevo_bytes += BLOCK_BYTES;
@@ -834,7 +834,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
           //escribo los 8192 bytes restantes
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
           fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
           llevo_bytes += BLOCK_BYTES;
@@ -871,7 +871,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
           //escribo los bytes_restantes(resto)
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), resto);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), resto);
           fwrite(buffer_aux, 1, resto, disco);
 
           llevo_bytes += resto;
@@ -883,7 +883,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
           //escribo los 8192 bytes restantes
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
           fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
           llevo_bytes += BLOCK_BYTES;
@@ -895,7 +895,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
           //escribo los 8192 bytes restantes
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * voy_bloque]), BLOCK_BYTES);
+          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
           fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
           llevo_bytes += BLOCK_BYTES;
