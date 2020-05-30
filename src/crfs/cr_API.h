@@ -1557,14 +1557,58 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 }
 
 
-int unload_disco_completo(unsinged disk, char* dest){
-  
+int cr_unload_particion_completa(unsigned disk, char* dest){
 }
 
-int cr_unload(unsinged disk, char* orig, char* dest){
+int cr_unload(unsigned disk, char* orig, char* dest){
+  // Funcion que se encarga de copiar un archivo,
+  // la particion completa (disk ∈ {1,...,4}) o el disco completo (disk = 0) ,
+  // referenciado por orig, hacia un nuevo archivo o directorio de ruta dest
+  // en su computador.
+  if (disk < 0 || disk > PARTICIONES){
+    printf("Input disco incorrecto\n");
+    return -1;
+  }
 
+  if (orig == NULL) {
+    // indica que quieren copiar todo un sector. Particion o Disco ?
+    if (disk == 0){
+      for (int partition = 1; partition < PARTICIONES + 1; partition++){
+        cr_unload_particion_completa(partition, dest);
+        return 1;
+      }
+    }
+    else{
+      // Alguna particion completa
+      cr_unload_particion_completa(disk, dest);
+      return 1;
+    }
+  }
+  else{
+    crFILE *unload_file = cr_open(disk, orig, 'r');
+    char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
+    cr_read(unload_file, buffer, unload_file->indice->file_size);
+    FILE *move_to;
+    if ((move_to = fopen(dest, "wb")) == NULL)
+    {
+      printf("PATH INCORRECTO (%s)\n", dest);
+      return -1;
+    }
+    fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
+    fclose(move_to);
+    free(buffer);
+    return 1;
+  }
 }
 
-int cr_load(unsinged disk, char* orig){
+
+int cr_load(unsigned disk, char* orig){
+// Funcio ́n que se encarga de copiar un archivo o los contenidos de
+// una carpeta, referenciado por orig a la particio ́n designada.
+// En caso de que un archivo sea demasiado pesado para el disco,
+// se debe escribir todo lo posible hasta acabar el espacio disponible.
+// En caso de que el sea una carpeta, se deben copiar los archivos que
+// esten dentro de esta carpeta, ignorando cualquier carpeta adicional que tenga.
+
 
 }
