@@ -90,6 +90,10 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
 
 int cr_exists(unsigned disk, char* filename)
 {
+	if(disk != 1 && disk != 2 && disk != 3 && disk != 4){
+		printf("ERROR: la particion indicada por disk es invalida\n");
+		return 2;
+	}
 	for(int i = 0; i<BLOCK_ENTRIES;i++){
     int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000); // Revisa el bit de validez
     if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name, filename,32) == 0){
@@ -101,15 +105,22 @@ int cr_exists(unsigned disk, char* filename)
 
 void cr_ls(unsigned disk)
 {
-	Directory* disco = Dir_disk[disk-1];
-	for (int i =0; i< BLOCK_ENTRIES; i++)
+	if(disk != 1 && disk != 2 && disk != 3 && disk != 4){
+		printf("ERROR: la particion indicada por disk es invalida\n");
+	}
+	else
 	{
-		Entry* entrada = disco->entries[i];
-		int a = !!((entrada->number[0] << 1) & 0x800000);
-		if (a == 1)
+		Directory* disco = Dir_disk[disk-1];
+		for (int i =0; i< BLOCK_ENTRIES; i++)
 		{
-			printf("%s\n",entrada->file_name);
+			Entry* entrada = disco->entries[i];
+			int a = !!((entrada->number[0] << 1) & 0x800000);
+			if (a == 1)
+			{
+				printf("%s\n",entrada->file_name);
+			}
 		}
+
 	}
 }
 
@@ -513,10 +524,16 @@ int cr_close(crFILE* file_desc){
 
 crFILE* cr_open(unsigned disk, char* filename, char *mode){
 
+	if(disk != 1 && disk != 2 && disk != 3 && disk != 4){
+		printf("ERROR: la particion indicada por disk es invalida\n");
+		return NULL;
+	}
+
   char *particion;
   char *nombre;
   char *str = malloc(sizeof(char)*32);
   int prt;
+
 
   FILE* disco = fopen(ruta_archivo, "r");
 
@@ -755,13 +772,21 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           return file;
         }
     }
+
+    else{
+    	printf("ERROR: el modo ingresado no corresponde ni a 'r' ni a 'w'\n");
+    	free(str);
+        fclose(disco);
+    	return NULL;
+    }
 }
 
 
 int cr_read(crFILE* file_desc, void* buffer, int nbytes)
 {
 
-  if (nbytes == 0) {
+  if (nbytes <= 0) {
+  	printf("ERROR: la cantidad de bytes ingresada es invalida\n");
     return 0;
   }
   if (!file_desc){
@@ -1058,9 +1083,15 @@ void guardar_info_archivo(crFILE* file){
 int cr_write(crFILE* file, void* buffer, int n_bytes){
   //chequeo que el modo del archivo este ok
 	if (!file){
-    printf("ERROR: Archivo no abierto correctamente\n" );
+    printf("ERROR: Archivo no abierto correctamente\n");
     return 0;
     }
+
+    if (n_bytes <= 0) {
+  	printf("ERROR: la cantidad de bytes ingresada es invalida\n");
+    return 0;
+    }
+
   	if(strncmp(file->mode, "w", 1) == 0)
   	{
 	    FILE* disco = fopen(ruta_archivo, "rb+");

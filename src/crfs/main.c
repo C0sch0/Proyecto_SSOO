@@ -12,8 +12,10 @@ int main(int argc, char *argv[]) {
     printf("Input debe coindicir con: ./crfs <simdisk.bin>\n");
     return 0;
   }
+  char* diskname = argv[1];
 
-  cr_mount("simdiskfilled.bin");
+  cr_mount(diskname);
+
   if (!ruta_archivo) {
     printf("Disk not mounted");
     return 0;
@@ -57,16 +59,7 @@ int main(int argc, char *argv[]) {
   cr_close(arch2);
   destroy_directories();
   destroy_bitmaps();
+  
   return 0;
-
 }
 
-// bloque directorio partición 1 parte en 0
-// bloque directorio partición 2 parte en 536870912
-// bloque directorio partición 3 parte en 536870912*2
-// bloque directorio partición 4 parte en 536870912*3
-
-//bloque bitmap particion 1 parte en 8192
-//bloque bitmap particion 2 parte en 536870912 + 8192
-//bloque bitmap particion 3 parte en 536870912*2 + 8192
-//bloque bitmap particion 4 parte en 536870912*3 + 8192

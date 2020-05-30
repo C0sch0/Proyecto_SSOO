@@ -10,13 +10,14 @@ int main(int argc, char *argv[]) {
   if (argc != 2)
   {
     printf("Input debe coindicir con: ./crfs <simdisk.bin>\n");
-    return 0;
+    return 1;
   }
 
-  cr_mount("simdiskfilled.bin");
+  char* diskname = argv[1];
+  cr_mount(diskname);
   if (!ruta_archivo) {
     printf("Disk not mounted");
-    return 0;
+    return 1;
   }
 
   create_dir_blocks();
