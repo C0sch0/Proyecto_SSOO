@@ -51,16 +51,19 @@ typedef struct partition {
   Bitmap *bitmap_partition;
 } Partition;
 
+
 typedef struct cr_file {
   char *file_name;
   char *valid;
   char *mode;
   int n_b_indice;
-  int  estado;
-  int  dir;
+  int estado;
+  int dir;
   int byte;
+  int byte_total;
   int bloque;
   int n_particion;
+  int bloque_dir;
   int bloques_ocupados;
   Index* indice;
 } crFILE;

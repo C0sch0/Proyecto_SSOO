@@ -65,9 +65,12 @@ crFILE* init_crfile(){
 
   // Donde estamos en el archivo
   file -> estado = 0;
-  file -> dir = 0;
+  file -> bloque_dir = 0;
   file-> bloques_ocupados = 0;
   file->n_particion = 0;
+  file -> byte = 0;
+  file -> byte_total = 0;
+  file -> bloque= 0;
   return file;
 }
 
@@ -224,12 +227,12 @@ int buscar_bloque_disponible(Bitmap* bitmap){
             num_bloque_relat = 8*i + j;
             a = i;
             b = j;
-            encontre = 1; 
+            encontre = 1;
           }
         }
         else{
           break;
-        } 
+        }
       }
     }
     else{
@@ -726,7 +729,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           Bitmap* mapeo = bitmaps[disk-1];
           //numero del primer bloque que esta disponible (numero relativo)
           //Ademas cambio en el bitmap el 0 por un 1 en ese bloque (si hay bloques disponibles)
-          int n_bloque = buscar_bloque_disponible(mapeo); 
+          int n_bloque = buscar_bloque_disponible(mapeo);
           if (n_bloque == 0)//no queda espacio
           {
             printf("No existe espacio en la particion\n");
@@ -772,8 +775,10 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
     }
 }
 
+
 int cr_read(crFILE* file_desc, void* buffer, int nbytes)
 {
+
   if (nbytes == 0) {
     return 0;
   }
@@ -782,48 +787,104 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     return 0;
   }
 
-  if(strncmp(file_desc-> mode, "r", 32) != 0){
+  if(strncmp(file_desc -> mode, "r", 1) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
     return 0;
   }
 
   FILE* disco = fopen(ruta_archivo, "r");
-  char* read_aux = malloc(sizeof(char)*BLOCK_BYTES);
-  char* buffer_aux = malloc(sizeof(char)*nbytes);
+  char* read_aux = malloc(sizeof(char) * BLOCK_BYTES +1);
+  char* buffer_aux = malloc(sizeof(char) * nbytes + 1);
   char* byte = malloc(sizeof(char));
   int efectivamente_leidos = 0;
 
-  // vemos en que bloque y byte quedamos leyendo
-  fseek(disco,
-    file_desc -> indice-> blocks_data[file_desc -> bloque]*BLOCK_BYTES
-    + file_desc -> byte, SEEK_SET);
+  int min = 0;
 
-  // obtenemos lo que queda por leer del bloque
-  fread(read_aux, BLOCK_BYTES - (file_desc -> byte), 1, disco);
+  // encontramos el menor entre lo que me queda por leer y lo que quiero leer
+  if(nbytes > file_desc ->indice ->file_size - file_desc -> byte_total){
+    // lo que me queda por leer
+    min = file_desc -> indice -> file_size - file_desc -> byte_total;
+  }
+  else{
+    min = nbytes;
+  }
 
-  int byte_actual = file_desc -> byte;
-  int bloque_actual = file_desc -> bloque;
+  int bloque_actual = file_desc -> bloque; // En que bloque estoy
+  int bloque_actual_dir = file_desc -> bloque_dir; // En que bloque de indireccionamiento directo estoy
+  int byte_actual = file_desc -> byte; // En que byte del bloque estoy
+  printf("tengo indireccionamiento simple %i\n",file_desc -> indice -> indirect_simple );
 
-  // nuestro for esta condicionado a la cantidad de bytes que queramos leer
-  // debo el primer bloque
-  for(int i = 0; i < nbytes; i++){
-    // el numero de posición va de 0 a 8192, si supero este numero debo irme a otro bloque a leer
+  if(file_desc -> byte_total < (2044 * BLOCK_BYTES)){
+    // Seguimos en los blocks data del indice
+    fseek(disco,
+      file_desc -> indice -> blocks_data[file_desc -> bloque] * BLOCK_BYTES, SEEK_SET);
+      bloque_actual++;
+  }
+  else if(file_desc -> indice -> indirect_simple == 1 && file_desc -> byte_total >= (2044 * BLOCK_BYTES)){
+    // Si tenemos indireccionamiento y nos pasamos de los bloque de datos (2044 * BLOCK_BYTES)
+    fseek(disco,
+        file_desc -> indice -> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES, SEEK_SET);
+    bloque_actual_dir++;
+  }
+  else{
+    // Si no tenemos indireccionamiento y nos pasamos de los bloque de datos (2044 * BLOCK_BYTES)
+    printf("Estas en el final del archivo\n");
+    return 0;
+  }
+
+  // Obtenemos lo que queda por leer del bloque
+  fread(read_aux, BLOCK_BYTES , 1, disco);
+
+
+  for(int i = 0; i < min; i++){
+
+    // El numero de posición va de 0 a 8192, si supero este numero debo irme a leer otro bloque
     if(byte_actual < BLOCK_BYTES)
     {
       //printf("%c**\n", read_aux[byte_actual]);
-      memcpy(&buffer_aux [i], &read_aux[byte_actual], 1);
+      memcpy(&(buffer_aux[i]), &(read_aux[byte_actual]), 1);
+      //printf("%c", buffer_aux[i]);
+
+      // Aumentamos en que byte estamos en el bloque
       byte_actual++;
       efectivamente_leidos++;
+
+      // Aumentamos en que byte estamos de todo el archivo
+      file_desc -> byte_total++;
+
     }
-    else
+    else if(byte_actual == BLOCK_BYTES && file_desc -> byte_total < (2044 * BLOCK_BYTES))
     {
+      // El byte actual es igual a 8192 y seguimos leyendo los bloque de datos del indice
       // cuando esto pase debo "reiniciar" el contador en 0
       printf("cambiamos de bloque al bloque:");
+
+      printf("%i\n", file_desc -> indice -> blocks_data [bloque_actual]);
+
+      fseek(disco, file_desc -> indice -> blocks_data [bloque_actual] * BLOCK_BYTES , SEEK_SET);
+      fread(read_aux, BLOCK_BYTES, 1, disco);
       bloque_actual++;
       byte_actual = 0;
-      printf("%i\n", file_desc -> indice-> blocks_data [bloque_actual]);
-      fseek(disco, file_desc -> indice-> blocks_data [bloque_actual]*BLOCK_BYTES , SEEK_SET);
-      fread(read_aux, BLOCK_BYTES, 1, disco);
+
+      // al iterar y pasa por aca se pierde una lectura
+      min++;
+
+     }
+     else if(byte_actual == BLOCK_BYTES && file_desc -> byte_total >= (2044 * BLOCK_BYTES) && file_desc -> indice -> indirect_simple != 0){
+
+       // pasamos al indireccionamiento simple
+       printf("cambiamos de bloque al bloque de datos y indireccionamiento simple:");
+
+       printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir]);
+       fseek(disco, file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES , SEEK_SET);
+       fread(read_aux, BLOCK_BYTES, 1, disco);
+
+       bloque_actual++;
+       byte_actual = 0;
+       bloque_actual_dir++;
+
+       // al iterar y pasa por aca se pierde una lectura
+       min++;
      }
   }
 
@@ -831,12 +892,29 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   {
     ((unsigned char *)buffer)[i] = buffer_aux[i];
   }
-  printf("%s\n", buffer);
+
+  // actualizamos la nueva ubicacion de donde quedamos leyendo
+  file_desc -> byte = byte_actual;
+  file_desc -> bloque = bloque_actual - 1; // en el for se le suma uno alfinal que sobra
+  file_desc -> bloque_dir = bloque_actual_dir;
+  if(file_desc -> bloque_dir > 0){
+    file_desc -> bloque_dir = bloque_actual_dir - 1 ;  // en el for se le suma uno alfinal que sobra pero solo si pasa esta etapa
+  }
+
+  //printf("%i\n", file_desc -> byte);
+  //printf("%i\n", file_desc -> indice -> blocks_data [  file_desc -> bloque]);
+  //printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[file_desc -> bloque_dir]);
+
   printf("efectivamente_leidos : %d\n", efectivamente_leidos);
+
   free(buffer_aux);
   free(read_aux);
+  free(byte);
+  fclose(disco);
+
   return efectivamente_leidos;
 }
+
 
 void actualizar_directorio(crFILE* file){
   Directory* dir = Dir_disk[file->n_particion - 1];
@@ -1087,7 +1165,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           llevo_bytes += BLOCK_BYTES;
         }
 
-        
+
       }
     }
 
@@ -1254,7 +1332,7 @@ int cr_rm(unsigned disk, char* filename) {
 
         // Calculamos la direccion del bloque indice del archivo
         char *st= malloc(sizeof(char)*3);
-        
+
         memcpy(st, Dir_disk[disk-1] -> entries[i] -> number, 3);
         n_bloque_indice = get_bloque(st);
 
@@ -1267,7 +1345,7 @@ int cr_rm(unsigned disk, char* filename) {
 
       }
     }
-    
+
     // Seteamos el archivo en el bloque indice
     fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
 
@@ -1277,7 +1355,7 @@ int cr_rm(unsigned disk, char* filename) {
     // Leemos el cuarto byte donde se guardan la cantidad de referencias que tiene el bloque indice
     cant_ref = indice_aux[3];
     //printf("%d\n", cant_ref);
-  
+
     // Le restamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
     cant_ref--;
 
@@ -1302,20 +1380,20 @@ int cr_rm(unsigned disk, char* filename) {
         memcpy(dir, &(indice_aux[q]), 4);
         int ref = buscar_ref(dir);
         //printf("dir -> %d\n", ref);
-        
+
         if (ref == 0) {
           break;
         }
-        // Buscamos el bit 
+        // Buscamos el bit
         ref = ref - (65536*(disk - 1));
-        
+
         int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
         //printf("Antes ---> %d\n", k);
-        
+
         // Cambiamos a cero el bit del bitmap
         bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
 
-        
+
       }
     }
 
@@ -1358,9 +1436,9 @@ int cr_rm(unsigned disk, char* filename) {
 int cr_hardlink (unsigned disk, char* orig, char* dest) {
 
   FILE* disco = fopen(ruta_archivo, "r");
-  
+
   int n_bloque_indice;
-  
+
   char * numero;
   char * nombre;
 
@@ -1379,7 +1457,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
       {
         // Calculamos la direccion del bloque indice del archivo
         char *st= malloc(sizeof(char)*3);
-        
+
         char* indice_aux = malloc(sizeof(char)*8192);
         memcpy(st, Dir_disk[disk-1] -> entries[i] -> number, 3);
         n_bloque_indice = get_bloque(st);
@@ -1406,7 +1484,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     fclose(disco);
     // Leemos el cuarto byte donde se guardan la cantidad de referencias que tiene el bloque indice
     // Le sumamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
-    
+
     // Descomentar cuando se guarde lel bloque directorio para no tener inconsistencias en el archivo .bin
     //aux[3]++;
 
@@ -1417,7 +1495,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     // // Escribimos el bloque indice
     // fwrite(aux, 8192, 1, disco_w);
 
-    // Copiamos la informacion a una nueva entrada del directorio, con puntero al bloque indice del otro archivo 
+    // Copiamos la informacion a una nueva entrada del directorio, con puntero al bloque indice del otro archivo
     // La parte "number" es igual a la del archivo original
     for (int i =0; i< 256; i++)
     {
@@ -1447,9 +1525,9 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
 int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) {
 
   FILE* disco = fopen(ruta_archivo, "r");
-  
+
   int n_bloque_indice;
-  
+
   char * numero;
   char * nombre;
 
@@ -1475,7 +1553,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 
       }
     }
-    
+
     for (int i =0; i< 256; i++)
     {
       int a = !!((Dir_disk[disk_dest-1] -> entries[i] -> number[0] << 1) & 0x800000);
@@ -1500,7 +1578,3 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 
   return 0;
 }
-
-
-
-
