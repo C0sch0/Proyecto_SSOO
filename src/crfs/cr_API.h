@@ -793,7 +793,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   }
 
   FILE* disco = fopen(ruta_archivo, "r");
-  char* read_aux = malloc(sizeof(char) * BLOCK_BYTES);
+  char* read_aux = malloc(sizeof(char) * BLOCK_BYTES +1);
   char* buffer_aux = malloc(sizeof(char) * nbytes + 1);
   char* byte = malloc(sizeof(char));
   int efectivamente_leidos = 0;
@@ -817,15 +817,13 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   if(file_desc -> byte_total < (2044 * BLOCK_BYTES)){
     // Seguimos en los blocks data del indice
     fseek(disco,
-      file_desc -> indice -> blocks_data[file_desc -> bloque] * BLOCK_BYTES
-      + file_desc -> byte, SEEK_SET);
+      file_desc -> indice -> blocks_data[file_desc -> bloque] * BLOCK_BYTES, SEEK_SET);
       bloque_actual++;
   }
   else if(file_desc -> indice -> indirect_simple == 1 && file_desc -> byte_total >= (2044 * BLOCK_BYTES)){
     // Si tenemos indireccionamiento y nos pasamos de los bloque de datos (2044 * BLOCK_BYTES)
     fseek(disco,
-        file_desc -> indice -> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES
-        + file_desc -> byte, SEEK_SET);
+        file_desc -> indice -> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES, SEEK_SET);
     bloque_actual_dir++;
   }
   else{
@@ -835,7 +833,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   }
 
   // Obtenemos lo que queda por leer del bloque
-  fread(read_aux, BLOCK_BYTES - (file_desc -> byte), 1, disco);
+  fread(read_aux, BLOCK_BYTES , 1, disco);
 
 
   for(int i = 0; i < min; i++){
@@ -845,6 +843,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     {
       //printf("%c**\n", read_aux[byte_actual]);
       memcpy(&(buffer_aux[i]), &(read_aux[byte_actual]), 1);
+      //printf("%c", buffer_aux[i]);
 
       // Aumentamos en que byte estamos en el bloque
       byte_actual++;
