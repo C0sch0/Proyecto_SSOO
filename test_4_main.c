@@ -30,18 +30,18 @@ int main(int argc, char *argv[]) {
   fclose(prueba);
   cr_close(arch);
   crFILE* arch2 = cr_open(4, "Orgullo y Prejuicio.txt","r");
-  char* buffer = calloc(3001, sizeof(char));
-  int num2 = cr_read(arch2, buffer, 3000);
+  char* buffer = calloc(1001, sizeof(char));
+  int num2 = cr_read(arch2, buffer, 1000);
   printf("num bytes leidos = %d\n", num2);
   printf("Extracto 1 = %s\n", buffer);
   printf("\n\n\n");
-  char* buffer2 = calloc(5001, sizeof(char));
-  int num3 = cr_read(arch2, buffer2, 5000);
+  char* buffer2 = calloc(1001, sizeof(char));
+  int num3 = cr_read(arch2, buffer2, 1000);
   printf("num bytes leidos = %d\n", num3);
   printf("Extracto 2 = %s\n", buffer2);
   printf("\n\n\n");
-  char* buffer3 = calloc(6001, sizeof(char));
-  int num4 = cr_read(arch2, buffer3, 6000);
+  char* buffer3 = calloc(7001, sizeof(char));
+  int num4 = cr_read(arch2, buffer3, 7000);
   printf("num bytes leidos = %d\n", num4);
   printf("Extracto 3 = %s\n", buffer3);
   printf("\n\n\n");
@@ -60,13 +60,3 @@ int main(int argc, char *argv[]) {
   return 0;
 
 }
-
-// bloque directorio partición 1 parte en 0
-// bloque directorio partición 2 parte en 536870912
-// bloque directorio partición 3 parte en 536870912*2
-// bloque directorio partición 4 parte en 536870912*3
-
-//bloque bitmap particion 1 parte en 8192
-//bloque bitmap particion 2 parte en 536870912 + 8192
-//bloque bitmap particion 3 parte en 536870912*2 + 8192
-//bloque bitmap particion 4 parte en 536870912*3 + 8192
