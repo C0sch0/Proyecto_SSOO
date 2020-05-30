@@ -776,7 +776,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
     else{
     	printf("ERROR: el modo ingresado no corresponde ni a 'r' ni a 'w'\n");
     	free(str);
-         fclose(disco);
+        fclose(disco);
     	return NULL;
     }
 }
@@ -1083,13 +1083,14 @@ void guardar_info_archivo(crFILE* file){
 int cr_write(crFILE* file, void* buffer, int n_bytes){
   //chequeo que el modo del archivo este ok
 	if (!file){
-    printf("ERROR: Archivo no abierto correctamente\n" );
+    printf("ERROR: Archivo no abierto correctamente\n");
     return 0;
     }
 
     if (n_bytes <= 0) {
   	printf("ERROR: la cantidad de bytes ingresada es invalida\n");
     return 0;
+    }
 
   	if(strncmp(file->mode, "w", 1) == 0)
   	{

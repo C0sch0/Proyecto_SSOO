@@ -13,7 +13,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  cr_mount(argv[1]);
+  char* diskname = argv[1];
+  cr_mount(diskname);
   if (!ruta_archivo) {
     printf("Disk not mounted");
     return 1;
