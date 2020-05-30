@@ -89,7 +89,9 @@ int cr_exists(unsigned disk, char* filename)
   int valid = 0;
 
   for(int i = 0; i<BLOCK_ENTRIES;i++){
-    if(strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 ){
+    int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000); // Revisa el bit de validez
+
+    if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 ){
       //printf("existe\n");
       free(str);
       return 1;
@@ -134,7 +136,7 @@ void cr_ls(unsigned disk)
 void create_dir_blocks()
 {
   Entry_aux entrada_aux;
-  FILE* disk = fopen("simdiskfilled.bin", "r");
+  FILE* disk = fopen(ruta_archivo, "r");
   for(int i = 0;i < 4 ; i++)
   {
   	Dir_disk[i]= malloc(sizeof(Directory));
@@ -923,6 +925,281 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
   }
 }
 
+int cr_rm(unsigned disk, char* filename) {
+  int bit_dir;
+  char* dir = malloc(sizeof(char)*4);
+
+  int cant_ref;
+
+  char* indice_aux = malloc(sizeof(char)*8192);
+
+  int n_bloque_indice;
+  int direction;
+
+  FILE* disco = fopen(ruta_archivo, "r");
+
+  if (cr_exists(disk, filename)) {
+    // Revisamos la cantidad de referencias del archivo en el bloque indice
+    // Si es 1 debemos eliminar los datos en bitmap y bloque directorio
+    // Si es < 1 debemos eliminar datos del bloque directorio y restar 1 a referencias
+
+    printf("Archivo existe\n");
+
+    for (int i =0; i< 256; i++)
+    {
+      int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) == 0)
+      {
+
+        // Calculamos la direccion del bloque indice del archivo
+        char *st= malloc(sizeof(char)*3);
+        
+        memcpy(st, Dir_disk[disk-1] -> entries[i] -> number, 3);
+        n_bloque_indice = get_bloque(st);
+
+        // Cambiamos el bit de validez a cero
+        Dir_disk[disk-1] -> entries[i] -> number[0] &= ~(1 << 7);
+        //Dir_disk[disk-1] -> entries[i] -> file_name = malloc(sizeof(char)*29);
+
+
+        free(st);
+
+      }
+    }
+    
+    // Seteamos el archivo en el bloque indice
+    fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
+
+    // Leemos el bloque indice
+    fread(indice_aux, 8192, 1, disco);
+
+    // Leemos el cuarto byte donde se guardan la cantidad de referencias que tiene el bloque indice
+    cant_ref = indice_aux[3];
+    //printf("%d\n", cant_ref);
+  
+    // Le restamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
+    cant_ref--;
+
+    // Descomentar cuando se guarde lel bloque directorio para no tener inconsistencias en el archivo .bin
+    // indice_aux[3]--;
+
+    // FILE* disco_w = fopen(ruta_archivo, "rb+");
+
+    // fseek(disco_w, 8192 * n_bloque_indice, SEEK_SET);
+
+    // // Escribimos el bloque indice
+    // fwrite(indice_aux, 8192, 1, disco_w);
+    // fclose(disco_w);
+
+    // Si el indice de referencias llega a cero
+    // recorremos el bloque y vemos todas los punteros a bloques de datos y actualizacmos el bitmap (Actualizamos a 0)
+    if (cant_ref == 0) {
+      for (int k = 0; k < 2044; k++) {
+
+        int q = 12+4*k;
+
+        memcpy(dir, &(indice_aux[q]), 4);
+        int ref = buscar_ref(dir);
+        //printf("dir -> %d\n", ref);
+        
+        if (ref == 0) {
+          break;
+        }
+        // Buscamos el bit 
+        ref = ref - (65536*(disk - 1));
+        
+        int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
+        //printf("Antes ---> %d\n", k);
+        
+        // Cambiamos a cero el bit del bitmap
+        bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
+
+        
+      }
+    }
+
+    // Buscamos el bit de direccionamiento indirecto
+    // memcpy(dir, &(indice_aux[8188]), 4);
+    // int ref = buscar_ref(dir);
+    // printf("dir -> %d\n", ref);
+
+    // int i_bloque_indice = get_bloque(ref);
+
+    // // Seteamos el archivo en el bloque indice
+    // fseek(disco, 8192 * i_bloque_indice, SEEK_SET);
+
+    // char* i_indice_aux = malloc(sizeof(char)*8192);
+
+    // // Leemos el bloque indice
+    // fread(i_indice_aux, 8192, 1, disco);
+
+
+    // for (int k = 0; k < 2044; k++) {
+
+    //     int q = 12+4*k;
+
+    //     memcpy(dir, &(i_indice_aux[q]), 4);
+    //     int ref = buscar_ref(dir);
+    //     printf("dir -> %d\n", ref);
+    // }
+
+    // Liberamos la memoria
+    free(indice_aux);
+    free(dir);
+    fclose(disco);
+
+  } else {
+    printf("Archivo no existe");
+  }
+  return 0;
+}
+
+int cr_hardlink (unsigned disk, char* orig, char* dest) {
+
+  FILE* disco = fopen(ruta_archivo, "r");
+  
+  int n_bloque_indice;
+  
+  char * numero;
+  char * nombre;
+
+  int libre;
+  // Revisamos si el archivo origen existe
+  if (cr_exists(disk, orig)) {
+
+    printf("Archivo existe\n");
+
+    // Debemos buscar la referencia al bloque indice del archivo
+    for (int i =0; i< 256; i++)
+    {
+      int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name , orig, 32) == 0)
+      {
+        // Calculamos la direccion del bloque indice del archivo
+        char *st= malloc(sizeof(char)*3);
+        
+        char* indice_aux = malloc(sizeof(char)*8192);
+        memcpy(st, Dir_disk[disk-1] -> entries[i] -> number, 3);
+        n_bloque_indice = get_bloque(st);
+
+        // guardamos la informacion de la entrada
+        numero = Dir_disk[disk-1] -> entries[i] -> number;
+        nombre = Dir_disk[disk-1] -> entries[i] -> file_name;
+
+        free(st);
+        free(indice_aux);
+        break;
+
+      }
+    }
+    // Le sumamos 1 a la cantidad de referencias del archivo
+    char* aux = malloc(sizeof(char)*8192);
+
+     // Seteamos el archivo en el bloque indice
+    fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
+
+    // Leemos el bloque indice
+    fread(aux, 8192, 1, disco);
+
+    fclose(disco);
+    // Leemos el cuarto byte donde se guardan la cantidad de referencias que tiene el bloque indice
+    // Le sumamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
+    
+    // Descomentar cuando se guarde lel bloque directorio para no tener inconsistencias en el archivo .bin
+    //aux[3]++;
+
+    // FILE* disco_w = fopen(ruta_archivo, "rb+");
+
+    // fseek(disco_w, 8192 * n_bloque_indice, SEEK_SET);
+
+    // // Escribimos el bloque indice
+    // fwrite(aux, 8192, 1, disco_w);
+
+    // Copiamos la informacion a una nueva entrada del directorio, con puntero al bloque indice del otro archivo 
+    // La parte "number" es igual a la del archivo original
+    for (int i =0; i< 256; i++)
+    {
+      int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 0)
+      {
+        libre = i;
+
+        break;
+      }
+    }
+
+    Dir_disk[disk-1]-> entries[libre] = entry_init();
+    memcpy(Dir_disk[disk-1]-> entries[libre]->file_name, dest, 29);
+    memcpy(Dir_disk[disk-1]-> entries[libre]->number, numero, 3);
+
+  } else {
+    printf("Archivo no existe\n");
+
+  }
+
+
+  return 0;
+}
+
+int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) {
+
+  FILE* disco = fopen(ruta_archivo, "r");
+  
+  int n_bloque_indice;
+  
+  char * numero;
+  char * nombre;
+
+  int libre;
+  // Revisamos si el archivo origen existe
+  if (cr_exists(disk_orig, orig)) {
+
+    printf("Archivo existe\n");
+
+    // Debemos buscar la referencia al bloque indice del archivo
+    for (int i =0; i< 256; i++)
+    {
+      int a = !!((Dir_disk[disk_orig-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 1 && strncmp(Dir_disk[disk_orig-1]->entries[i]->file_name , orig, 32) == 0)
+      {
+
+        // guardamos la informacion de la entrada
+        numero = Dir_disk[disk_orig-1] -> entries[i] -> number;
+        nombre = Dir_disk[disk_orig-1] -> entries[i] -> file_name;
+
+        break;
+
+      }
+    }
+    
+    for (int i =0; i< 256; i++)
+    {
+      int a = !!((Dir_disk[disk_dest-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 0)
+      {
+        libre = i;
+
+        break;
+      }
+    }
+
+    Dir_disk[disk_dest-1]-> entries[libre] = entry_init();
+    memcpy(Dir_disk[disk_dest-1]-> entries[libre]->file_name, dest, 29);
+    memcpy(Dir_disk[disk_dest-1]-> entries[libre]->number, numero, 3);
+
+  } else {
+    printf("Archivo no existe\n");
+
+  }
+
+
+  return 0;
+}
 
 int cr_close(crFILE* file_desc){
   free(file_desc-> file_name);
