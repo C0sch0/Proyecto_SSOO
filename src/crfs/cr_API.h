@@ -803,12 +803,15 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   // encontramos el menor entre lo que me queda por leer y lo que quiero leer
   if(nbytes > file_desc ->indice ->file_size - file_desc -> byte_total){
     // lo que me queda por leer
+    printf("file size = %ld\n",file_desc ->indice ->file_size);
+    printf("byte_total = %d\n", file_desc->byte_total);
     min = file_desc -> indice -> file_size - file_desc -> byte_total;
   }
   else{
     min = nbytes;
   }
 
+  printf("min = %d\n", min);
   int bloque_actual = file_desc -> bloque; // En que bloque estoy
   int bloque_actual_dir = file_desc -> bloque_dir; // En que bloque de indireccionamiento directo estoy
   int byte_actual = file_desc -> byte; // En que byte del bloque estoy
@@ -867,7 +870,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
       byte_actual = 0;
 
       // al iterar y pasa por aca se pierde una lectura
-      min++;
+      i--;
 
      }
      else if(byte_actual == BLOCK_BYTES && file_desc -> byte_total >= (2044 * BLOCK_BYTES) && file_desc -> indice -> indirect_simple != 0){
@@ -884,7 +887,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
        bloque_actual_dir++;
 
        // al iterar y pasa por aca se pierde una lectura
-       min++;
+       i--;
      }
   }
 
