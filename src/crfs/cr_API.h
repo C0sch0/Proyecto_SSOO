@@ -89,39 +89,16 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
 }
 
 int cr_exists(unsigned disk, char* filename)
-{ char *particion;
-  char *nombre;
-  char *str = malloc(sizeof(char)*32);
-  int valid = 0;
-
-  for(int i = 0; i<BLOCK_ENTRIES;i++){
+{ 
+	for(int i = 0; i<BLOCK_ENTRIES;i++){
     int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000); // Revisa el bit de validez
-
-    if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name , filename, 32) ==0 ){
-      //printf("existe\n");
-      free(str);
-      return 1;
-    }else{
-
-      memcpy(str, Dir_disk[disk-1]->entries[i]->file_name, 32);
-      particion = strtok(str,"/");
-      nombre = strtok(NULL,"/");
-      if(nombre!=NULL){
-        if(strncmp(nombre , filename, 32) ==0){
-          // llamo denuevo a la función y busco el nombre en la partición indicada
-          valid = cr_exists(atoi(particion), nombre);
-          if(valid == 1){
-          free(str);
-          return 1;
-        }
-      }
-    }
-  }
+    if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name, filename,32) == 0){
+      	return 1;
+    	}
+	}	
+	return 0;
 }
-  free(str);
-  //printf("no existe\n");
-  return 0;
-}
+
 void cr_ls(unsigned disk)
 {
 	Directory* disco = Dir_disk[disk-1];
@@ -321,7 +298,7 @@ void cr_bitmap(unsigned disk, bool hex)
 	}
 	else
 	{
-		printf("Debe elegir una opcion valida de particion (1-4) o 0 si quiere el de todo el disco\n");
+		printf("ERROR: Debe elegir una opcion valida de particion (1-4) o 0 si quiere el de todo el disco\n");
 	}
 }
 
@@ -513,22 +490,26 @@ long buscar_size(char* str)
 }
 
 int cr_close(crFILE* file_desc){
-  free(file_desc-> file_name);
-  free(file_desc-> valid);
-  free(file_desc-> mode);
-  if(file_desc->indice->indirect_simple)
-  {
-    if(file_desc->indice->indirect_simple>0){
-      destroy_indirect_simple(file_desc->indice->bloque_indireccion);
-    }
-  }
-  destroy_indice(file_desc->indice);
-  free(file_desc);
-  return 1;
+	if (file_desc != NULL){
+		free(file_desc-> file_name);
+		free(file_desc-> valid);
+		free(file_desc-> mode);
+  		if(file_desc->indice->indirect_simple)
+  		{
+    		if(file_desc->indice->indirect_simple>0){
+     		destroy_indirect_simple(file_desc->indice->bloque_indireccion);
+    		}
+  		}
+  		destroy_indice(file_desc->indice);
+  		free(file_desc);
+  		return 0;
+	}
+	else{
+		printf("ERROR: el archivo no es valido por lo que no se puede cerrar\n");
+		return 1;
+	}  
 }
 
-
-// No la estamos usando por ahora
 
 crFILE* cr_open(unsigned disk, char* filename, char *mode){
 
@@ -544,6 +525,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
     int exist;
     // Chequeamos que exista el archivo
     exist = cr_exists(disk, filename);
+    //printf("exist = %d\n", exist);
     if(exist == 1)
     {
       // el archivo en el disco si existe creamos el crFILE
@@ -646,7 +628,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           int q = 12+4*i;
           memcpy(aux_ptr, &(indice_aux[q]), 4);
           ind->blocks_data[i] = buscar_ref(aux_ptr);
-          printf("i=%d puntero=%d\n", i, ind->blocks_data[i]);
+          //printf("i=%d puntero=%d\n", i, ind->blocks_data[i]);
           file->bloques_ocupados ++;
           free(aux_ptr);
         }
@@ -688,12 +670,12 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
         free(aux_ind);
 
       }
-      printf("references = %d\n", ind->references);
-      printf("file size = %ld\n", ind->file_size);
-      printf("n_bloque indice = %d\n", file->n_b_indice);
       printf("filename = %s\n", file->file_name);
+      printf("file references = %d\n", ind->references);
+      printf("file size = %ld\n", ind->file_size);
+      printf("numero bloque indice = %d\n", file->n_b_indice);
       printf("primer bloque de datos = %d\n", ind->blocks_data[0]);
-      printf("segundo bloque de datos = %d\n", ind->blocks_data[1]);
+      printf("ultimo bloque de datos = %d\n", ind->blocks_data[blocks_ocup - 1]);
       free(st);
       free(str);
       free(indice_aux);
@@ -702,7 +684,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
     }
     else{
       // exist es 0
-      printf("El archivo no existe en la particion\n");
+      printf("ERROR: El archivo no existe en la particion\n");
       free(str);
       fclose(disco);
       return NULL;
@@ -716,7 +698,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       if(exist == 1)
       {
         // el archivo ya existe -> no lo puedo abrir en este modo
-        printf("Este archivo ya existe por lo que no se puede abrir en modo de escritura\n");
+        printf("ERROR: el archivo ya existe por lo que no se puede abrir en modo de escritura\n");
         free(str);
         fclose(disco);
         return NULL;
@@ -732,7 +714,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           int n_bloque = buscar_bloque_disponible(mapeo);
           if (n_bloque == 0)//no queda espacio
           {
-            printf("No existe espacio en la particion\n");
+            printf("ERROR: No existe espacio en la particion para agregar un archivo\n");
             free(str);
             fclose(disco);
             return NULL;
@@ -741,7 +723,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           //Busco la primera entrada vacia para llenarla con la info del archivo que estoy creando
           int new_entry = buscar_entry_disponible(directorio_actual);
           if(new_entry == 0){ //no quedan entradas
-            printf("No quedan entradas disponibles en el directorio\n");
+            printf("ERROR: No quedan entradas disponibles en el directorio para agregar un archivo\n");
             free(str);
             fclose(disco);
             return NULL;
@@ -783,12 +765,12 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     return 0;
   }
   if (!file_desc){
-    printf("Archivo no abierto correctamente\n" );
+    printf("ERROR: Archivo no abierto correctamente\n");
     return 0;
   }
 
   if(strncmp(file_desc -> mode, "r", 1) != 0){
-    printf("El archivo no fue abierto en modo de lectura\n" );
+    printf("ERROR: El archivo no fue abierto en modo de lectura\n" );
     return 0;
   }
 
@@ -803,19 +785,19 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   // encontramos el menor entre lo que me queda por leer y lo que quiero leer
   if(nbytes > file_desc ->indice ->file_size - file_desc -> byte_total){
     // lo que me queda por leer
-    printf("file size = %ld\n",file_desc ->indice ->file_size);
-    printf("byte_total = %d\n", file_desc->byte_total);
+    //printf("file size = %ld\n",file_desc ->indice ->file_size);
+    //printf("byte_total = %d\n", file_desc->byte_total);
     min = file_desc -> indice -> file_size - file_desc -> byte_total;
   }
   else{
     min = nbytes;
   }
 
-  printf("min = %d\n", min);
+  //printf("min = %d\n", min);
   int bloque_actual = file_desc -> bloque; // En que bloque estoy
   int bloque_actual_dir = file_desc -> bloque_dir; // En que bloque de indireccionamiento directo estoy
   int byte_actual = file_desc -> byte; // En que byte del bloque estoy
-  printf("tengo indireccionamiento simple %i\n",file_desc -> indice -> indirect_simple );
+  //printf("tengo indireccionamiento simple %i\n",file_desc -> indice -> indirect_simple );
 
   if(file_desc -> byte_total < (2044 * BLOCK_BYTES)){
     // Seguimos en los blocks data del indice
@@ -829,9 +811,13 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
         file_desc -> indice -> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES, SEEK_SET);
     bloque_actual_dir++;
   }
-  else{
+  if(file_desc -> indice -> file_size == file_desc -> byte_total){
     // Si no tenemos indireccionamiento y nos pasamos de los bloque de datos (2044 * BLOCK_BYTES)
-    printf("Estas en el final del archivo\n");
+    printf("ERROR: No quedan bytes por leer\n");
+    free(buffer_aux);
+  	free(read_aux);
+  	free(byte);
+  	fclose(disco);
     return 0;
   }
 
@@ -844,9 +830,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     // El numero de posición va de 0 a 8192, si supero este numero debo irme a leer otro bloque
     if(byte_actual < BLOCK_BYTES)
     {
-      //printf("%c**\n", read_aux[byte_actual]);
       memcpy(&(buffer_aux[i]), &(read_aux[byte_actual]), 1);
-      //printf("%c", buffer_aux[i]);
 
       // Aumentamos en que byte estamos en el bloque
       byte_actual++;
@@ -860,10 +844,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     {
       // El byte actual es igual a 8192 y seguimos leyendo los bloque de datos del indice
       // cuando esto pase debo "reiniciar" el contador en 0
-      printf("cambiamos de bloque al bloque:");
-
-      printf("%i\n", file_desc -> indice -> blocks_data [bloque_actual]);
-
+      
       fseek(disco, file_desc -> indice -> blocks_data [bloque_actual] * BLOCK_BYTES , SEEK_SET);
       fread(read_aux, BLOCK_BYTES, 1, disco);
       bloque_actual++;
@@ -876,9 +857,6 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
      else if(byte_actual == BLOCK_BYTES && file_desc -> byte_total >= (2044 * BLOCK_BYTES) && file_desc -> indice -> indirect_simple != 0){
 
        // pasamos al indireccionamiento simple
-       printf("cambiamos de bloque al bloque de datos y indireccionamiento simple:");
-
-       printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir]);
        fseek(disco, file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES , SEEK_SET);
        fread(read_aux, BLOCK_BYTES, 1, disco);
 
@@ -903,12 +881,6 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   if(file_desc -> bloque_dir > 0){
     file_desc -> bloque_dir = bloque_actual_dir - 1 ;  // en el for se le suma uno alfinal que sobra pero solo si pasa esta etapa
   }
-
-  //printf("%i\n", file_desc -> byte);
-  //printf("%i\n", file_desc -> indice -> blocks_data [  file_desc -> bloque]);
-  //printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[file_desc -> bloque_dir]);
-
-  printf("efectivamente_leidos : %d\n", efectivamente_leidos);
 
   free(buffer_aux);
   free(read_aux);
@@ -1085,90 +1057,92 @@ void guardar_info_archivo(crFILE* file){
 
 int cr_write(crFILE* file, void* buffer, int n_bytes){
   //chequeo que el modo del archivo este ok
-  if(strncmp(file->mode, "w", 1) == 0)
-  {
-    FILE* disco = fopen(ruta_archivo, "rb+");
-    //necesito ver cuantos bloques de datos ocupo con los n_bytes
-    int resto = n_bytes % BLOCK_BYTES;
-    printf("bloque indice = %d\n", file->n_b_indice);
-
-    char* buffer_aux = malloc(sizeof(char)*8192);
-
-    int bloques_necesito;
-    if(resto > 0){
-      bloques_necesito = n_bytes/BLOCK_BYTES + 1;
+	if (!file){
+    printf("ERROR: Archivo no abierto correctamente\n" );
+    return 0;
     }
-    else{
-      bloques_necesito = n_bytes/BLOCK_BYTES;
-    }
-    //busco en el bitmap de a uno los bloques, escribo en el, alfinal actualizo la info con lo que alcance a escribir
-    Bitmap* bitmap_actual = bitmaps[file->n_particion - 1];
-    //no necesito indireccionamiento simple
-    if(bloques_necesito <= 2044){
-      int bloque_disp_rel;
-      int bloque_disp_abs;
-      int voy_bloque = 0;
-      int llevo_bytes = 0;
-      file->indice->indirect_simple = 0;
-      for(int i = 0; i < bloques_necesito; i++){
-        bloque_disp_rel = buscar_bloque_disponible(bitmap_actual);//obtengo numero del primer bloque vacio (relativo)
-        if(bloque_disp_rel == 0){
-          //no quedan bloques disponibles en la particion
-          printf("ERROR: no quedan bloques disponibles en la particion");
-          file->indice->file_size = llevo_bytes;
-          free(buffer_aux);
-          fclose(disco);
-          guardar_info_archivo(file);
-          return llevo_bytes;
-        }
-        bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
-        file->indice->blocks_data[i] = bloque_disp_abs; //lo guardo en el array de data_blocks
-        printf("bloque = %d\n", bloque_disp_abs);
-        voy_bloque ++;
-        file->bloques_ocupados++;
-        if(bloques_necesito - voy_bloque == 0 && resto > 0){ //estoy en el ultimo bloque y escribo la cantidad de bytes = resto
-          //seteamos el archivo en el bloque
-          fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+  	if(strncmp(file->mode, "w", 1) == 0)
+  	{
+	    FILE* disco = fopen(ruta_archivo, "rb+");
+	    //necesito ver cuantos bloques de datos ocupo con los n_bytes
+	    int resto = n_bytes % BLOCK_BYTES;
+	    //printf("bloque indice = %d\n", file->n_b_indice);
 
-          //escribo los bytes_restantes(resto)
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), resto);
-          fwrite(buffer_aux, 1, resto, disco);
+	    char* buffer_aux = malloc(sizeof(char)*8192);
 
-          llevo_bytes += resto;
-          file->indice->file_size = llevo_bytes;
-          fclose(disco);
-          free(buffer_aux);
-          guardar_info_archivo(file);
-          return llevo_bytes;
-        }
-        else if(bloques_necesito - voy_bloque == 0 && resto == 0){//estoy en el ultimo bloque y escribo 8192 bytes.
-          //seteamos el archivo en el bloque
-          fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
-          //escribo los 8192 bytes restantes
+	    int bloques_necesito;
+	    if(resto > 0){
+	      bloques_necesito = n_bytes/BLOCK_BYTES + 1;
+	    }
+	    else{
+	      bloques_necesito = n_bytes/BLOCK_BYTES;
+	    }
+	    //busco en el bitmap de a uno los bloques, escribo en el, alfinal actualizo la info con lo que alcance a escribir
+	    Bitmap* bitmap_actual = bitmaps[file->n_particion - 1];
+	    //no necesito indireccionamiento simple
+	    if(bloques_necesito <= 2044){
+	      int bloque_disp_rel;
+	      int bloque_disp_abs;
+	      int voy_bloque = 0;
+	      int llevo_bytes = 0;
+	      file->indice->indirect_simple = 0;
+	      for(int i = 0; i < bloques_necesito; i++){
+	        bloque_disp_rel = buscar_bloque_disponible(bitmap_actual);//obtengo numero del primer bloque vacio (relativo)
+	        if(bloque_disp_rel == 0){
+	          //no quedan bloques disponibles en la particion
+	          printf("ERROR: no quedan bloques disponibles en la particion\n");
+	          file->indice->file_size = llevo_bytes;
+	          free(buffer_aux);
+	          fclose(disco);
+	          guardar_info_archivo(file);
+	          return llevo_bytes;
+	        }
+	        bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
+	        file->indice->blocks_data[i] = bloque_disp_abs; //lo guardo en el array de data_blocks
+	        //printf("bloque = %d\n", bloque_disp_abs);
+	        voy_bloque ++;
+	        file->bloques_ocupados++;
+	        if(bloques_necesito - voy_bloque == 0 && resto > 0){ //estoy en el ultimo bloque y escribo la cantidad de bytes = resto
+	          //seteamos el archivo en el bloque
+	          fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
-          //escribo los bytes_restantes(resto)
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
-          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+	          //escribo los bytes_restantes(resto)
+	          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), resto);
+	          fwrite(buffer_aux, 1, resto, disco);
 
-          llevo_bytes += BLOCK_BYTES;
-          file->indice->file_size = llevo_bytes;
-          fclose(disco);
-          free(buffer_aux);
-          guardar_info_archivo(file);
-          return llevo_bytes;
-        }
-        else if(bloques_necesito > voy_bloque){
-          //seteamos el archivo en el bloque
-          fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+	          llevo_bytes += resto;
+	          file->indice->file_size = llevo_bytes;
+	          fclose(disco);
+	          free(buffer_aux);
+	          guardar_info_archivo(file);
+	          return llevo_bytes;
+	        }
+	        else if(bloques_necesito - voy_bloque == 0 && resto == 0){//estoy en el ultimo bloque y escribo 8192 bytes.
+	          //seteamos el archivo en el bloque
+	          fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
+	          //escribo los 8192 bytes restantes
 
-          //escribo los 8192 bytes restantes
-          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
-          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
+	          //escribo los bytes_restantes(resto)
+	          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
+	          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
-          llevo_bytes += BLOCK_BYTES;
-        }
+	          llevo_bytes += BLOCK_BYTES;
+	          file->indice->file_size = llevo_bytes;
+	          fclose(disco);
+	          free(buffer_aux);
+	          guardar_info_archivo(file);
+	          return llevo_bytes;
+	        }
+	        else if(bloques_necesito > voy_bloque){
+	          //seteamos el archivo en el bloque
+	          fseek(disco, BLOCK_BYTES * bloque_disp_abs , SEEK_SET);
 
+	          //escribo los 8192 bytes restantes
+	          memcpy(buffer_aux, &(buffer[BLOCK_BYTES * i]), BLOCK_BYTES);
+	          fwrite(buffer_aux, 1, BLOCK_BYTES, disco);
 
+	          llevo_bytes += BLOCK_BYTES;
+	        }
       }
     }
 
@@ -1183,7 +1157,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         bloque_disp_rel = buscar_bloque_disponible(bitmap_actual); //obtengo numero del primer bloque vacio (relativo)
         if(bloque_disp_rel == 0){
           //no quedan bloques disponibles en la particion
-          printf("ERROR: no quedan bloques disponibles en la particion");
+          printf("ERROR: no quedan bloques disponibles en la particion\n");
           file->indice->file_size = llevo_bytes;
           fclose(disco);
           free(buffer_aux);
@@ -1210,7 +1184,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
       bloque_disp_rel = buscar_bloque_disponible(bitmap_actual);
       if(bloque_disp_rel == 0){
           //no quedan bloques disponibles en la particion
-          printf("ERROR: no quedan bloques disponibles en la particion");
+          printf("ERROR: no quedan bloques disponibles en la particion\n");
           file->indice->file_size = llevo_bytes;
           fclose(disco);
           free(buffer_aux);
@@ -1226,7 +1200,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         bloque_disp_rel = buscar_bloque_disponible(bitmap_actual); //obtengo numero del primer bloque vacio (relativo)
         if(bloque_disp_rel == 0){
           //no quedan bloques disponibles en la particion
-          printf("ERROR: no quedan bloques disponibles en la particion");
+          printf("ERROR: no quedan bloques disponibles en la particion\n");
           file->indice->file_size = llevo_bytes;
           fclose(disco);
           free(buffer_aux);
@@ -1280,7 +1254,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
             //estoy en el ultimo bloque del bloque de indireccionamiento simple
             int me_quedan = n_bytes - llevo_bytes;
             if (me_quedan > 0){ //queria seguir escribiendo pero llegue al max del archivo
-              printf("ERROR: el archivo no puede ser tan grande\n");
+              printf("ERROR: Ya se usaron todos los bloques de datos disponibles para el archivo.\n");
               file->indice->file_size = llevo_bytes;
               fclose(disco);
               free(buffer_aux);
@@ -1301,7 +1275,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
   }
   //modo no es de escritura
   else{
-    printf("Error al tratar de escribir en un archivo abierto en modo lectura\n");
+    printf("ERROR: El archivo no fue abierto en modo de escritura\n");
     return 0;
   }
 }
