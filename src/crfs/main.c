@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
   cr_close(arch2);
   destroy_directories();
   destroy_bitmaps();
-  
+
   return 0;
 }
-

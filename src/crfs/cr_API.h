@@ -1616,7 +1616,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     }
   }
   else{
-    crFILE *unload_file = cr_open(disk, orig, 'r');
+    crFILE *unload_file = cr_open(disk, orig, "r");
     char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
     cr_read(unload_file, buffer, unload_file->indice->file_size);
     FILE *move_to;
