@@ -49,6 +49,9 @@ Indirect* init_ind_simple()
 Index* init_indice()
 {
   Index* indice = malloc(sizeof(Index));
+  indice->references = 0;
+  indice->file_size = 0;
+  indice->indirect_simple = 0;
   indice->blocks_data = malloc(sizeof(unsigned int)*2044);
   return indice;
 }
@@ -116,8 +119,6 @@ int cr_exists(unsigned disk, char* filename)
   //printf("no existe\n");
   return 0;
 }
-
-
 void cr_ls(unsigned disk)
 {
 	Directory* disco = Dir_disk[disk-1];
@@ -213,22 +214,66 @@ int buscar_bloque_disponible(Bitmap* bitmap){
   int num_bloque_relat = 0;
   for (int i = 0; i< BLOCK_BYTES; i++)
   {
-    for (int j = 0; j < 8; j++)
-    {
-      int k = !!((bitmap->map[i] << j) & 0x80);
-      if(k == 0)
+    if(encontre == 0){
+      for (int j = 0; j < 8; j++)
       {
-        num_bloque_relat = 8*i + j;
-        a = i;
-        b = j;
-        encontre = 1;
-        break;
+        if(encontre == 0){
+          int k = !!((bitmap->map[i] << j) & 0x80);
+          if(k == 0)
+          {
+            num_bloque_relat = 8*i + j;
+            a = i;
+            b = j;
+            encontre = 1; 
+          }
+        }
+        else{
+          break;
+        } 
       }
+    }
+    else{
+      break;
     }
   }
   if (encontre == 1){
-    bitmap->map[a] |= 1 << b;
-    return num_bloque_relat;}
+    char* ah = calloc(1, sizeof(char));
+    if (b == 0){
+      char aw = (char) (bitmap->map[a] + pow(2, 7));
+      memcpy(ah, &(aw), 1);
+      }
+    if (b == 1){
+      char aw = (char) (bitmap->map[a] + pow(2, 6));
+      memcpy(ah, &(aw), 1);
+    }
+    if (b == 2){
+      char aw = (char) (bitmap->map[a] + pow(2,5));
+      memcpy(ah, &(aw), 1);
+    }
+    if (b == 3){
+     char aw = (char) (bitmap->map[a] + pow(2, 4));
+     memcpy(ah, &(aw), 1);
+    }
+    if (b == 4){
+       char aw = (char) (bitmap->map[a] + pow(2, 3));
+       memcpy(ah, &(aw), 1);
+    }
+    if (b == 5){
+      char aw =(char) (bitmap->map[a] + pow(2, 2));
+      memcpy(ah, &(aw), 1);
+    }
+    if (b == 6){
+      char aw = (char) (bitmap->map[a] + pow(2, 1));
+      memcpy(ah, &(aw), 1);
+    }
+    if (b == 7){
+      char aw = (char) (bitmap->map[a] + pow(2, 0));
+      memcpy(ah, &(aw), 1);
+    }
+    memcpy(&(bitmap->map[a]), ah, 1);
+    free(ah);
+    return num_bloque_relat;
+  }
   else
   {
     //no hay bloques disponibles
@@ -379,24 +424,21 @@ char* traducir_num_bloque(int num_bloque){
   int aux;
   int w = 0;
 
-  int a[24],i;
+  int a[24], b[24], i;
+  for(int y = 0; y< 24; y++)
+  {
+    b[y] = 0;
+    a[y] = 0;
+
+  }
   for(i=0;num_bloque>0;i++)
   {
   a[i] = num_bloque%2;
   num_bloque = num_bloque/2;
-
-  }
-
-  int b[24];
-  for(int y = 0; y< 24; y++)
-  {
-    b[y] = 0;
-
   }
   for(i=i-1;i>=0;i--)
   {
   b[23 - i] = a[i];
-
   }
   b[0] = 1;
   for(int r = 0; r < 3; r++){
@@ -407,9 +449,7 @@ char* traducir_num_bloque(int num_bloque){
         w += pow(2, q);
       }
     }
-
     pormientras[r] = w;
-
   }
   memcpy(num_a_chars, &(pormientras), 3);
   return num_a_chars;
@@ -467,6 +507,21 @@ long buscar_size(char* str)
     	}
     }
     return siz;
+}
+
+int cr_close(crFILE* file_desc){
+  free(file_desc-> file_name);
+  free(file_desc-> valid);
+  free(file_desc-> mode);
+  if(file_desc->indice->indirect_simple)
+  {
+    if(file_desc->indice->indirect_simple>0){
+      destroy_indirect_simple(file_desc->indice->bloque_indireccion);
+    }
+  }
+  destroy_indice(file_desc->indice);
+  free(file_desc);
+  return 1;
 }
 
 
@@ -571,21 +626,71 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       memcpy(aux_size, &(indice_aux[4]), 8);
       ind->file_size = buscar_size(aux_size);
       free(aux_size);
-      for (int i = 0; i < 2044; i++)
-      {
-        char* aux_ptr = malloc(sizeof(char)*4);
-        int q = 12+4*i;
-        memcpy(aux_ptr, &(indice_aux[q]), 4);
-        ind->blocks_data[i] = buscar_ref(aux_ptr);
-        if(ind->blocks_data[i] > 0){
-          file->bloques_ocupados ++;
-        }
-        free(aux_ptr);
+      int resto = ind->file_size % BLOCK_BYTES;
+      int blocks_ocup;
+      if(resto > 0){
+        blocks_ocup = ind->file_size/BLOCK_BYTES + 1;
       }
-      char* aux_ind = malloc(sizeof(char)*4);
-      memcpy(aux_ind, &(indice_aux[8188]), 4);
-      ind->indirect_simple = buscar_ref(aux_ind);
-      free(aux_ind);
+      else{
+        blocks_ocup= ind->file_size/BLOCK_BYTES;
+      }
+      if(blocks_ocup <= 2044){
+        //printf("menos de 2044\n");
+        //printf("los bloques de datos deberian ser: %d\n", blocks_ocup);
+        for (int i = 0; i < blocks_ocup; i++)
+        {
+          char* aux_ptr = malloc(sizeof(char)*4);
+          int q = 12+4*i;
+          memcpy(aux_ptr, &(indice_aux[q]), 4);
+          ind->blocks_data[i] = buscar_ref(aux_ptr);
+          printf("i=%d puntero=%d\n", i, ind->blocks_data[i]);
+          file->bloques_ocupados ++;
+          free(aux_ptr);
+        }
+        ind->indirect_simple = 0;
+      }
+      else{
+        //printf("mas de 2044\n");
+        //printf("los bloques de datos deberian ser: %d\n", blocks_ocup);
+        for (int i = 0; i < 2044; i++)
+        {
+          char* aux_ptr = malloc(sizeof(char)*4);
+          int q = 12+4*i;
+          memcpy(aux_ptr, &(indice_aux[q]), 4);
+          ind->blocks_data[i] = buscar_ref(aux_ptr);
+          //printf("i=%d puntero=%d\n", i, ind->blocks_data[i]);
+          file->bloques_ocupados ++;
+          free(aux_ptr);
+        }
+        char* aux_ind = malloc(sizeof(char)*4);
+        memcpy(aux_ind, &(indice_aux[8188]), 4);
+        ind->indirect_simple = buscar_ref(aux_ind);
+        //printf("bloque de indireccion = %d\n", ind->indirect_simple);
+        //seteamos el archivo en el bloque indireccionamiento simple
+        fseek(disco, BLOCK_BYTES * ind->indirect_simple , SEEK_SET);
+        char* indireccionamiento = malloc(sizeof(char)*BLOCK_BYTES);
+        fread(indireccionamiento, BLOCK_BYTES, 1, disco);
+        ind->bloque_indireccion = init_ind_simple();
+        int bloques_i = blocks_ocup - 2044;
+        for (int i = 0; i < bloques_i; i++)
+        {
+          char* aux_ptr = malloc(sizeof(char)*4);
+          memcpy(aux_ptr, &(indireccionamiento[4*i]), 4);
+          ind-> bloque_indireccion->indirect_blocks_data[i] = buscar_ref(aux_ptr);
+          //printf("i=%d puntero=%d\n", i, ind-> bloque_indireccion->indirect_blocks_data[i]);
+          file->bloques_ocupados ++;
+          free(aux_ptr);
+        }
+        free(indireccionamiento);
+        free(aux_ind);
+
+      }
+      printf("references = %d\n", ind->references);
+      printf("file size = %ld\n", ind->file_size);
+      printf("n_bloque indice = %d\n", file->n_b_indice);
+      printf("filename = %s\n", file->file_name);
+      printf("primer bloque de datos = %d\n", ind->blocks_data[0]);
+      printf("segundo bloque de datos = %d\n", ind->blocks_data[1]);
       free(st);
       free(str);
       free(indice_aux);
@@ -621,7 +726,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
           Bitmap* mapeo = bitmaps[disk-1];
           //numero del primer bloque que esta disponible (numero relativo)
           //Ademas cambio en el bitmap el 0 por un 1 en ese bloque (si hay bloques disponibles)
-          int n_bloque = buscar_bloque_disponible(mapeo);
+          int n_bloque = buscar_bloque_disponible(mapeo); 
           if (n_bloque == 0)//no queda espacio
           {
             printf("No existe espacio en la particion\n");
@@ -677,7 +782,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     return 0;
   }
 
-  if(strncmp(file_desc -> mode, "r", 32) != 0){
+  if(strncmp(file_desc-> mode, "r", 32) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
     return 0;
   }
@@ -733,7 +838,169 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   return efectivamente_leidos;
 }
 
+void actualizar_directorio(crFILE* file){
+  Directory* dir = Dir_disk[file->n_particion - 1];
+  int posicion = 0;
+  for(int i = 0; i < BLOCK_ENTRIES; i++){
+    if(strncmp(dir->entries[i]->file_name , file->file_name, 32) ==0 ){
+      posicion = i;
+    }
+  }
+  //la posicion que tengo que cambiar es la i
+  FILE* disk = fopen(ruta_archivo, "rb+");
+  int f = file->n_particion - 1;
+  fseek(disk, 536870912*f + 32*posicion, SEEK_SET);
+  char* aux_linea = malloc(sizeof(char)*32);
+  memcpy(aux_linea, file->valid, 3);
+  memcpy(&(aux_linea[3]), file->file_name, 29);
+  fwrite(aux_linea, 1, 32, disk);
+  free(aux_linea);
+  fclose(disk);
+}
 
+void actualizar_bitmap(int n_particion){
+  Bitmap* bm = bitmaps[n_particion - 1];
+  FILE* disk = fopen(ruta_archivo, "rb+");
+  int hasta = 536870912*(n_particion - 1)+ BLOCK_BYTES;
+  fseek(disk, hasta, SEEK_SET);
+  char* aux_bitmap = malloc(sizeof(char)*BLOCK_BYTES);
+  memcpy(aux_bitmap, bm->map, BLOCK_BYTES);
+  fwrite(aux_bitmap, 1, BLOCK_BYTES, disk);
+  free(aux_bitmap);
+  fclose(disk);
+}
+
+char* traducir_int(int num){
+  char* result = calloc(4, sizeof(char));
+  char pormientras[4];
+  int aux;
+  int w = 0;
+  int a[32], b[32], i;
+  for(int y = 0; y< 32; y++)
+  {
+    b[y] = 0;
+    a[y] = 0;
+  }
+  for(i=0;num>0;i++)
+  {
+  a[i] = num%2;
+  num = num/2;
+  }
+  for(i=i-1;i>=0;i--)
+  {
+  b[31 - i] = a[i];
+  }
+  for(int r = 0; r < 4; r++){
+    w = 0;
+    for(int t = 0; t < 8; t++){
+      if(b[8*r + t] == 1){
+        int q = 7 - t;
+        w += pow(2, q);
+      }
+    }
+    pormientras[r] = w;
+  }
+  memcpy(result, &(pormientras), 4);
+  return result;
+}
+
+char* traducir_long(long num){
+  char* result = calloc(8, sizeof(char));
+  char pormientras[8];
+  int aux;
+  int w = 0;
+  int a[64], b[64], i;
+  for(int y = 0; y< 64; y++)
+  {
+    b[y] = 0;
+    a[y] = 0;
+  }
+  for(i=0;num>0;i++)
+  {
+  a[i] = num%2;
+  num = num/2;
+  }
+  for(i=i-1;i>=0;i--)
+  {
+    b[63 - i] = a[i];
+  }
+  for(int r = 0; r < 8; r++){
+    w = 0;
+    for(int t = 0; t < 8; t++){
+      if(b[8*r + t] == 1){
+        int q = 7 - t;
+        w += pow(2, q);
+      }
+    }
+    pormientras[r] = w;
+  }
+  memcpy(result, &(pormientras), 8);
+  return result;
+}
+
+void escribir_en_bloque_indice(crFILE* file){
+  FILE* disk = fopen(ruta_archivo, "rb+");
+  //primero escribo las referencias(4bytes)
+  int hasta = BLOCK_BYTES * file->n_b_indice;
+  fseek(disk, hasta, SEEK_SET);
+  char* aux_ref = traducir_int(file->indice->references);
+  fwrite(aux_ref, 1, 4, disk);
+  free(aux_ref);
+  //escribo el filesize(8bytes)
+  fseek(disk, hasta + 4, SEEK_SET);
+  char* aux_siz = traducir_long(file->indice->file_size);
+  fwrite(aux_siz, 1, 8, disk);
+  free(aux_siz);
+  //no hay indireccionamiento simple
+  if(file->bloques_ocupados <= 2044){
+    //escribo los punteros a bloques de datos ocupados
+    for(int i = 0; i< file->bloques_ocupados; i++){
+      int q = 12 + 4*i;
+      fseek(disk, hasta + q, SEEK_SET);
+      char* aux_ref = traducir_int(file->indice->blocks_data[i]);
+      fwrite(aux_ref, 1, 4, disk);
+      free(aux_ref);
+    }
+  }
+  //si hay indireccionamiento simple
+  else{
+    //escribo los 2044 primero
+    for(int i = 0; i< 2044; i++){
+      int q = 12 + 4*i;
+      fseek(disk, hasta + q, SEEK_SET);
+      char* aux_ref = traducir_int(file->indice->blocks_data[i]);
+      fwrite(aux_ref, 1, 4, disk);
+      free(aux_ref);
+    }
+    //escribo el numero de bloque del indireccionamiento
+    fseek(disk, 8188, SEEK_SET);
+    char* aux_ref = traducir_int(file->indice->indirect_simple);
+    fwrite(aux_ref, 1, 4, disk);
+    free(aux_ref);
+    //escribo los bloques ocupados del indireccionamiento
+    int b_i = file->bloques_ocupados - 2044;
+    int hasta_2 = BLOCK_BYTES * file->indice->indirect_simple;
+    for(int i = 0; i< b_i; i++){
+      fseek(disk, hasta_2 + 4*i, SEEK_SET);
+      char* aux_ref = traducir_int(file->indice->bloque_indireccion->indirect_blocks_data[i]);
+      fwrite(aux_ref, 1, 4, disk);
+      free(aux_ref);
+    }
+  }
+  fclose(disk);
+}
+
+void guardar_info_archivo(crFILE* file){
+  //en el directorio:
+  //necesito guardar el nombre del archivo
+  //necesito guardar el valid
+  actualizar_directorio(file);
+  //bitmap:
+  //necesito actualizar el bitmap
+  actualizar_bitmap(file->n_particion);
+  //bloque indice: referencias, file size y bloques de datos ocupados (+ indireccion simple si hay)
+  escribir_en_bloque_indice(file);
+}
 
 int cr_write(crFILE* file, void* buffer, int n_bytes){
   //chequeo que el modo del archivo este ok
@@ -742,6 +1009,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
     FILE* disco = fopen(ruta_archivo, "rb+");
     //necesito ver cuantos bloques de datos ocupo con los n_bytes
     int resto = n_bytes % BLOCK_BYTES;
+    printf("bloque indice = %d\n", file->n_b_indice);
 
     char* buffer_aux = malloc(sizeof(char)*8192);
 
@@ -760,16 +1028,21 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
       int bloque_disp_abs;
       int voy_bloque = 0;
       int llevo_bytes = 0;
+      file->indice->indirect_simple = 0;
       for(int i = 0; i < bloques_necesito; i++){
-        bloque_disp_rel = buscar_bloque_disponible(bitmap_actual); //obtengo numero del primer bloque vacio (relativo)
+        bloque_disp_rel = buscar_bloque_disponible(bitmap_actual);//obtengo numero del primer bloque vacio (relativo)
         if(bloque_disp_rel == 0){
           //no quedan bloques disponibles en la particion
           printf("ERROR: no quedan bloques disponibles en la particion");
           file->indice->file_size = llevo_bytes;
+          free(buffer_aux);
+          fclose(disco);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
         file->indice->blocks_data[i] = bloque_disp_abs; //lo guardo en el array de data_blocks
+        printf("bloque = %d\n", bloque_disp_abs);
         voy_bloque ++;
         file->bloques_ocupados++;
         if(bloques_necesito - voy_bloque == 0 && resto > 0){ //estoy en el ultimo bloque y escribo la cantidad de bytes = resto
@@ -782,6 +1055,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
 
           llevo_bytes += resto;
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         else if(bloques_necesito - voy_bloque == 0 && resto == 0){//estoy en el ultimo bloque y escribo 8192 bytes.
@@ -795,6 +1071,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
 
           llevo_bytes += BLOCK_BYTES;
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         else if(bloques_necesito > voy_bloque){
@@ -808,7 +1087,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           llevo_bytes += BLOCK_BYTES;
         }
 
-        free(buffer_aux);
+        
       }
     }
 
@@ -825,6 +1104,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           //no quedan bloques disponibles en la particion
           printf("ERROR: no quedan bloques disponibles en la particion");
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
@@ -849,6 +1131,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           //no quedan bloques disponibles en la particion
           printf("ERROR: no quedan bloques disponibles en la particion");
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
       bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel;
@@ -862,6 +1147,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
           //no quedan bloques disponibles en la particion
           printf("ERROR: no quedan bloques disponibles en la particion");
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
@@ -878,6 +1166,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
 
           llevo_bytes += resto;
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         else if(bloques_ind_sim - voy_3_bloque == 0 && resto == 0){//estoy en el ultimo bloque y escribo 8192 bytes.
@@ -890,6 +1181,9 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
 
           llevo_bytes += BLOCK_BYTES;
           file->indice->file_size = llevo_bytes;
+          fclose(disco);
+          free(buffer_aux);
+          guardar_info_archivo(file);
           return llevo_bytes;
         }
         else if(bloques_ind_sim > voy_3_bloque){
@@ -907,10 +1201,16 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
             if (me_quedan > 0){ //queria seguir escribiendo pero llegue al max del archivo
               printf("ERROR: el archivo no puede ser tan grande\n");
               file->indice->file_size = llevo_bytes;
+              fclose(disco);
+              free(buffer_aux);
+              guardar_info_archivo(file);
               return llevo_bytes;
             }
             if(me_quedan == 0){
               file->indice->file_size = llevo_bytes;
+              fclose(disco);
+              free(buffer_aux);
+              guardar_info_archivo(file);
               return llevo_bytes;
             }
           }
@@ -1201,11 +1501,6 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
   return 0;
 }
 
-int cr_close(crFILE* file_desc){
-  free(file_desc-> file_name);
-  free(file_desc-> valid);
-  free(file_desc-> mode);
-  destroy_indice(file_desc->indice);
-  free(file_desc);
-  return 1;
-}
+
+
+

@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  cr_mount("/home/claudio/Desktop/simdiskfilled2.bin");
+  cr_mount("simdiskfilled.bin");
   if (!ruta_archivo) {
     printf("Disk not mounted");
     return 0;
@@ -19,31 +19,30 @@ int main(int argc, char *argv[]) {
 
   create_dir_blocks();
   create_cr_bitmaps();
-  //cr_ls(2);
-  cr_ls(2);
-  printf("\n");
-  cr_rm(2, "yes.mp3");
-  //cr_rm(1, "Baroque.mp3");
-  cr_soflink(1, 2, "text.txt", "1/text.txt");
-  cr_ls(2);
-  printf("\n");
-  cr_hardlink(2, "text.txt", "t.txt");
-  cr_ls(2);
-  printf("\n");
-  // crFILE* arch = cr_open(4, "ABaroque.mp3","w");
-  // if (arch!= NULL)
-  // {
-  // 	if(arch->indice->file_size != NULL)
-  //   {
-  // 		printf("%ld\n", arch->indice->file_size);
-  // 	}
-  // 	printf("%d\n", arch->n_b_indice);
-  //   crFILE* prueba = cr_open(1, "Baroque.mp3","r");
-  //   char * buffer = malloc(sizeof(char)*18000);;
-  //   cr_read(prueba, buffer, 18000);
-  // 	cr_close(arch);
-  //   cr_close(prueba);
-  // }
+  //cr_bitmap(4, 0);
+  // cr_ls(4);
+  crFILE* arch = cr_open(4, "Aprobando123.mp3","w");
+  FILE* prueba = fopen("prueba.txt", "r");
+  char* texto = calloc(10000, sizeof(char));
+  fgets(texto, 10000, prueba);
+  int num = cr_write(arch, texto, 10000);
+  printf("num = %d\n", num);
+  free(texto);
+  fclose(prueba);
+  cr_close(arch);
+  crFILE* arch2 = cr_open(4, "Aprobando123.mp3","r");
+  char* buffer = calloc(9000, sizeof(char));
+  int num2 = cr_read(arch2, buffer, 9000);
+  printf("%s\n", buffer);
+  free(buffer);
+  cr_close(arch2);
+  // FILE* prueba_2 = fopen("simdiskfilled.bin", "r");
+  // char* texto2 = calloc(10000, sizeof(char));
+  // fseek(prueba_2, 196611*8192, SEEK_SET);
+  // fgets(texto2, 10000, prueba_2);
+  // fclose(prueba_2);
+  // printf("%s\n", texto2);
+  // free(texto2);
   destroy_directories();
   destroy_bitmaps();
   return 0;
