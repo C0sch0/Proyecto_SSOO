@@ -65,9 +65,12 @@ crFILE* init_crfile(){
 
   // Donde estamos en el archivo
   file -> estado = 0;
-  file -> dir = 0;
+  file -> bloque_dir = 0;
   file-> bloques_ocupados = 0;
   file->n_particion = 0;
+  file -> byte = 0;
+  file -> byte_total = 0;
+  file -> bloque= 0;
   return file;
 }
 
@@ -784,14 +787,14 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     return 0;
   }
 
-  if(strncmp(file_desc -> mode, "r", 32) != 0){
+  if(strncmp(file_desc -> mode, "r", 1) != 0){
     printf("El archivo no fue abierto en modo de lectura\n" );
     return 0;
   }
 
   FILE* disco = fopen(ruta_archivo, "r");
   char* read_aux = malloc(sizeof(char) * BLOCK_BYTES);
-  char* buffer_aux = malloc(sizeof(char) * nbytes);
+  char* buffer_aux = malloc(sizeof(char) * nbytes + 1);
   char* byte = malloc(sizeof(char));
   int efectivamente_leidos = 0;
 
@@ -841,7 +844,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     if(byte_actual < BLOCK_BYTES)
     {
       //printf("%c**\n", read_aux[byte_actual]);
-      memcpy(&buffer_aux [i], &read_aux[byte_actual], 1);
+      memcpy(&(buffer_aux[i]), &(read_aux[byte_actual]), 1);
 
       // Aumentamos en que byte estamos en el bloque
       byte_actual++;
@@ -903,12 +906,12 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   //printf("%i\n", file_desc -> indice -> blocks_data [  file_desc -> bloque]);
   //printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[file_desc -> bloque_dir]);
 
-  printf("%s\n", buffer);
   printf("efectivamente_leidos : %d\n", efectivamente_leidos);
 
   free(buffer_aux);
   free(read_aux);
   free(byte);
+  fclose(disco);
 
   return efectivamente_leidos;
 }
