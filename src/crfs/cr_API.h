@@ -803,19 +803,19 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   // encontramos el menor entre lo que me queda por leer y lo que quiero leer
   if(nbytes > file_desc ->indice ->file_size - file_desc -> byte_total){
     // lo que me queda por leer
-    printf("file size = %ld\n",file_desc ->indice ->file_size);
-    printf("byte_total = %d\n", file_desc->byte_total);
+    //printf("file size = %ld\n",file_desc ->indice ->file_size);
+    //printf("byte_total = %d\n", file_desc->byte_total);
     min = file_desc -> indice -> file_size - file_desc -> byte_total;
   }
   else{
     min = nbytes;
   }
 
-  printf("min = %d\n", min);
+  //printf("min = %d\n", min);
   int bloque_actual = file_desc -> bloque; // En que bloque estoy
   int bloque_actual_dir = file_desc -> bloque_dir; // En que bloque de indireccionamiento directo estoy
   int byte_actual = file_desc -> byte; // En que byte del bloque estoy
-  printf("tengo indireccionamiento simple %i\n",file_desc -> indice -> indirect_simple );
+  //printf("tengo indireccionamiento simple %i\n",file_desc -> indice -> indirect_simple );
 
   if(file_desc -> byte_total < (2044 * BLOCK_BYTES)){
     // Seguimos en los blocks data del indice
@@ -831,7 +831,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   }
   else{
     // Si no tenemos indireccionamiento y nos pasamos de los bloque de datos (2044 * BLOCK_BYTES)
-    printf("Estas en el final del archivo\n");
+    //printf("Estas en el final del archivo\n");
     return 0;
   }
 
@@ -860,9 +860,9 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     {
       // El byte actual es igual a 8192 y seguimos leyendo los bloque de datos del indice
       // cuando esto pase debo "reiniciar" el contador en 0
-      printf("cambiamos de bloque al bloque:");
+      //printf("cambiamos de bloque al bloque:");
 
-      printf("%i\n", file_desc -> indice -> blocks_data [bloque_actual]);
+      //printf("%i\n", file_desc -> indice -> blocks_data [bloque_actual]);
 
       fseek(disco, file_desc -> indice -> blocks_data [bloque_actual] * BLOCK_BYTES , SEEK_SET);
       fread(read_aux, BLOCK_BYTES, 1, disco);
@@ -876,9 +876,9 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
      else if(byte_actual == BLOCK_BYTES && file_desc -> byte_total >= (2044 * BLOCK_BYTES) && file_desc -> indice -> indirect_simple != 0){
 
        // pasamos al indireccionamiento simple
-       printf("cambiamos de bloque al bloque de datos y indireccionamiento simple:");
+       //printf("cambiamos de bloque al bloque de datos y indireccionamiento simple:");
 
-       printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir]);
+       //printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir]);
        fseek(disco, file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[bloque_actual_dir] * BLOCK_BYTES , SEEK_SET);
        fread(read_aux, BLOCK_BYTES, 1, disco);
 
@@ -908,7 +908,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
   //printf("%i\n", file_desc -> indice -> blocks_data [  file_desc -> bloque]);
   //printf("%i\n", file_desc -> indice-> bloque_indireccion -> indirect_blocks_data[file_desc -> bloque_dir]);
 
-  printf("efectivamente_leidos : %d\n", efectivamente_leidos);
+  //printf("efectivamente_leidos : %d\n", efectivamente_leidos);
 
   free(buffer_aux);
   free(read_aux);
@@ -1090,7 +1090,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
     FILE* disco = fopen(ruta_archivo, "rb+");
     //necesito ver cuantos bloques de datos ocupo con los n_bytes
     int resto = n_bytes % BLOCK_BYTES;
-    printf("bloque indice = %d\n", file->n_b_indice);
+    //printf("bloque indice = %d\n", file->n_b_indice);
 
     char* buffer_aux = malloc(sizeof(char)*8192);
 
@@ -1123,7 +1123,7 @@ int cr_write(crFILE* file, void* buffer, int n_bytes){
         }
         bloque_disp_abs = 65536*(file->n_particion - 1) + bloque_disp_rel; // lo paso a numero absoluto
         file->indice->blocks_data[i] = bloque_disp_abs; //lo guardo en el array de data_blocks
-        printf("bloque = %d\n", bloque_disp_abs);
+        //printf("bloque = %d\n", bloque_disp_abs);
         voy_bloque ++;
         file->bloques_ocupados++;
         if(bloques_necesito - voy_bloque == 0 && resto > 0){ //estoy en el ultimo bloque y escribo la cantidad de bytes = resto

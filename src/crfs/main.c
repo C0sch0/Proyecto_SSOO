@@ -4,6 +4,8 @@
 #include <string.h>
 #include "cr_API.h"
 
+//TEST 5
+
 int main(int argc, char *argv[]) {
   if (argc != 2)
   {
@@ -19,21 +21,34 @@ int main(int argc, char *argv[]) {
 
   create_dir_blocks();
   create_cr_bitmaps();
-  crFILE* arch2 = cr_open(4, "Aprobando12345.mp3","r");
+  crFILE* arch = cr_open(4, "Orgullo y Prejuicio.txt","w");
+  FILE* prueba = fopen("prueba.txt", "r");
+  char* texto = calloc(14000, sizeof(char));
+  fgets(texto, 10000, prueba);
+  int num = cr_write(arch, texto, 14000);
+  free(texto);
+  fclose(prueba);
+  cr_close(arch);
+  crFILE* arch2 = cr_open(4, "Orgullo y Prejuicio.txt","r");
   char* buffer = calloc(1001, sizeof(char));
   int num2 = cr_read(arch2, buffer, 1000);
-  printf("%s\n", buffer);
+  printf("num bytes leidos = %d\n", num2);
+  printf("Extracto 1 = %s\n", buffer);
   printf("\n\n\n");
   char* buffer2 = calloc(1001, sizeof(char));
   int num3 = cr_read(arch2, buffer2, 1000);
-  printf("%s\n", buffer2);
+  printf("num bytes leidos = %d\n", num3);
+  printf("Extracto 2 = %s\n", buffer2);
   printf("\n\n\n");
   char* buffer3 = calloc(7001, sizeof(char));
   int num4 = cr_read(arch2, buffer3, 7000);
-  printf("%s\n", buffer3);
+  printf("num bytes leidos = %d\n", num4);
+  printf("Extracto 3 = %s\n", buffer3);
+  printf("\n\n\n");
   char* buffer4 = calloc(1001, sizeof(char));
   int num5 = cr_read(arch2, buffer4, 1000);
-  printf("%s\n", buffer4);
+  printf("num bytes leidos = %d\n", num5);
+  printf("Extracto 4 = %s\n", buffer4);
   printf("\n\n\n");
   free(buffer);
   free(buffer2);
