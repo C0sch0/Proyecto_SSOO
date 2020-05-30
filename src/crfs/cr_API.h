@@ -89,13 +89,13 @@ void directorio_append(Directory* bloque, Entry *entrada, int i)
 }
 
 int cr_exists(unsigned disk, char* filename)
-{ 
+{
 	for(int i = 0; i<BLOCK_ENTRIES;i++){
     int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000); // Revisa el bit de validez
     if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name, filename,32) == 0){
       	return 1;
     	}
-	}	
+	}
 	return 0;
 }
 
@@ -507,7 +507,7 @@ int cr_close(crFILE* file_desc){
 	else{
 		printf("ERROR: el archivo no es valido por lo que no se puede cerrar\n");
 		return 1;
-	}  
+	}
 }
 
 
@@ -844,7 +844,7 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes)
     {
       // El byte actual es igual a 8192 y seguimos leyendo los bloque de datos del indice
       // cuando esto pase debo "reiniciar" el contador en 0
-      
+
       fseek(disco, file_desc -> indice -> blocks_data [bloque_actual] * BLOCK_BYTES , SEEK_SET);
       fread(read_aux, BLOCK_BYTES, 1, disco);
       bloque_actual++;
@@ -1554,4 +1554,17 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 
 
   return 0;
+}
+
+
+int unload_disco_completo(unsinged disk, char* dest){
+  
+}
+
+int cr_unload(unsinged disk, char* orig, char* dest){
+
+}
+
+int cr_load(unsinged disk, char* orig){
+
 }
