@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
   printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
   printf("En ruta apuntaremos a la carpeta ./unload/\n");
 
-  char file1[40] =  "guides.txt";
-  char file2[40] = "unload/copia_guides.txt";
+  char file1[40] =  "QPC.gif";
+  char file2[40] = "unload/copia_QPC.gif";
 
   cr_unload(1, file1, file2);
   printf("Archivo copiado desde ./guides.txt a ./unload/copy_guides.txt\n");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
   printf("Funcionalidad 2: Particion\n");
   printf("Que particion ? (1-4):");
-  char direccion3[40] =  "";
+  char direccion3[40] =  "unload/";
   unsigned disk;
 
   scanf("%u", &disk);
