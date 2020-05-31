@@ -1663,7 +1663,6 @@ int cr_load(unsigned disk, char* orig){
     return -1;
   }
 
-
   cr_open(disk, orig, "w");
   return 0;
 }
