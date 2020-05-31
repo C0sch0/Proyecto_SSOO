@@ -1600,6 +1600,7 @@ void cr_unload_particion_completa(unsigned disk, char* dest){
       strcat(dest, "copia_");
       strcat(dest, entrada->file_name);
       cr_unload(disk, entrada->file_name, dest);
+      // memcpy(file->file_name, nombre_a_copiar, 29);
     }
   }
 }
@@ -1656,14 +1657,27 @@ int cr_load(unsigned disk, char* orig){
 // esten dentro de esta carpeta, ignorando cualquier carpeta adicional que tenga.
 
   if (disk < 0 || disk > PARTICIONES){
-    printf("Input disco incorrecto\n");
+    printf("ERROR: Input disco incorrecto\n");
     return -1;
   }
   if (orig == NULL) {
-    printf("orig NULL\n");
+    printf("ERROR: orig NULL\n");
     return -1;
   }
+  int archivo = 1;
+  if (archivo) {
+    crFILE* arch2 = cr_open(disk, orig, "w");
+    char* buffer = calloc(1001, sizeof(char));
+    if(arch2 != NULL){
+      int num2 = cr_read(arch2, buffer, 1000);
+      cr_close(arch2);
+    }
+    free(buffer);
 
-  cr_open(disk, orig, "w");
+  }
+  else{
+  }
+
+
   return 0;
 }

@@ -25,14 +25,14 @@ int main(int argc, char *argv[]) {
   create_cr_bitmaps();
 
   printf("LOAD\n");
-  printf("-------------------------------------------------:\n");
+  printf("-------------------------------------------------\n");
 
   printf("Funcionalidad 1: Subir un archivo a cierta particion\n");
 
   printf("1 - En la particion 3 tenemos:\n");
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
-
+  printf("Particion 3 vacia \n");
   printf("2. Probaremos primero copiando un archivo txt y un .gif a esta particion.\n");
   printf("3. Archivo .txt copiado\n");
   printf("4. Archivo .gif copiado\n");
@@ -43,12 +43,14 @@ int main(int argc, char *argv[]) {
   cr_load(3, file2);
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
-
+  printf("------------------ Ambos archivos han sido creados dentro de 3 ------------------ \n");
   printf("------------------ Ahora copiamos una carpeta a particion 3 ------------------ \n");
+  printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
   char carpeta[40] = "Intrucciones/";
-  cr_load(3, carpeta);
-  printf("------------------ LOAD PARTITION: 3  carpeta: %s ------------------ \n", carpeta);
+  //cr_load(3, carpeta);
+  printf("------------------ Archivos carpeta %s subidos a particion 3 ------------------ \n", carpeta);
+  printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
   destroy_directories();
   destroy_bitmaps();
