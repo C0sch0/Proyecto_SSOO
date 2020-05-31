@@ -1599,7 +1599,6 @@ void cr_unload_particion_completa(unsigned disk, char* dest){
       strcat(nombre, "copia_");
       strcat(nombre, entrada->file_name);
       cr_unload(disk, entrada->file_name, nombre);
-      char* nombre = "";
     }
   }
 }
@@ -1616,8 +1615,8 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     if (disk == 0){
       for (int partition = 1; partition < PARTICIONES + 1; partition++){
         cr_unload_particion_completa(partition, dest);
-        return 1;
       }
+      return 1;
     }
     else{
       // Alguna particion completa
@@ -1664,10 +1663,7 @@ int cr_load(unsigned disk, char* orig){
     return -1;
   }
 
-  Entry_aux entrada_aux;
-  FILE* archivo = fopen(orig, "r");
-  fread(&entrada_aux, 32, 1, archivo);
-  printf("%s\n", entrada_aux.file_name);
-  return 0;
 
+  cr_open(disk, orig, "w");
+  return 0;
 }
