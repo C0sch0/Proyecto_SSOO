@@ -85,20 +85,20 @@ Funcion para borrar archivos. Elimina el archivo referenciado por la ruta path d
 **int cr_softlink(unsigned disk_orig, unsigned disk_dest, char* orig, char* dest)**
 
 **int cr_unload(unsinged disk, char* orig, char* dest):**
-Funcion que se encarga de copiar un archivo, particion completa o disco a otra direccion.
-Uno de los chequeos importantes es que el Input de Disco sea valido. Debe ser un numero entre 0 y 4. Esto nos servira para saber que archivos se desean mover por parte del usuario.
+Encargada de copiar un archivo, particion completa o disco a otra direccion.
+Uno de los chequeos importantes es que el Input de Disco sea valido. Debe ser un numero entre 0 y 4. Esto nos servira para saber qué y cuántos archivos se desean mover por parte del usuario.
 
-
-En caso de querer solo un archivo, se debe indicar su nombre, particion especifica en donde podemos encontrarlo y direccion de destino.
+En caso de querer solo un archivo, se debe indicar su nombre, particion especifica en donde podemos encontrarlo y direccion de destino. Para lograr copiar el archivo a otra direccion, crearemos una CrFILE a partir de la direccion de origen, leyendo su contenido. A traves de un buffer se extraera y decantara la informacion a un nuevo archivo en la direccion indicada por dest.
 
 En caso de querer una particion especifica, se debe cumplir:
 - direccion de origen sea NULL como direccion de origen,
 - disk ∈ {1,...,4}
+Esta accion gatillara una inspeccion por todos los bloques activos de la particion, extrayendo toda la informacion de sus archivos al directorio indicado.
 
 En caso de querer todo el disco,
 - direccion de origen sea NULL como direccion de origen,
 - disk == 0
-
+Esta accion gatillara una inspeccion por todos los bloques activos de la particion, por todo el disco, extrayendo toda la informacion de sus archivos al directorio indicado.
 
 **int cr_load(unsinged disk, char* orig):**
 
