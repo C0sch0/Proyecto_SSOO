@@ -24,6 +24,11 @@ int main(int argc, char *argv[]) {
   create_dir_blocks();
   create_cr_bitmaps();
 
+  printf("LOAD\n");
+  printf("-------------------------------------------------:\n");
+
+  printf("Funcionalidad 1: Subir un archivo a cierta particion\n");
+
   printf("1 - En la particion 3 tenemos:\n");
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
@@ -39,7 +44,11 @@ int main(int argc, char *argv[]) {
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
 
-  printf("------------------ Ahora copiamos una carpeta ------------------ \n");
+  printf("------------------ Ahora copiamos una carpeta a particion 3 ------------------ \n");
+  cr_ls(3);
+  char carpeta[40] = "Intrucciones/";
+  cr_load(3, carpeta);
+  printf("------------------ LOAD PARTITION: 3  carpeta: %s ------------------ \n", carpeta);
   cr_ls(3);
   destroy_directories();
   destroy_bitmaps();
