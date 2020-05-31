@@ -20,49 +20,43 @@ int main(int argc, char *argv[]) {
     printf("Disk not mounted");
     return 0;
   }
+
   create_dir_blocks();
   create_cr_bitmaps();
-
-
-
-  printf("UNLOAD\n");
-  printf("-------------------------------------------------:\n");
-
-  printf("Funcionalidad 1: Copiar un archivo\n");
-  printf("En la particion 1 tenemos:\n");
-  printf("--- CR LS ---\n");
-  cr_ls(1);
-  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
-  printf("En ruta apuntaremos a la carpeta ./unload/\n");
-
-  char file1[40] =  "QPC.gif";
-  char file2[40] = "unload/copia_QPC.gif";
-
-  cr_unload(1, file1, file2);
-  printf("Archivo copiado desde ./guides.txt a ./unload/copy_guides.txt\n");
-  printf(" \n" );
-
-  printf("-------------------------------------------------\n");
-
-  printf("Funcionalidad 2: Particion\n");
-  printf("Que particion ? (1-4):");
-  char direccion3[40] =  "unload/";
-  unsigned disk;
-
-  scanf("%u", &disk);
-  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", disk, direccion3);
-  cr_unload(disk, NULL, direccion3);
-  printf("=== Particion copiada ===\n");
-
-  printf("-------------------------------------------------:\n");
-  char file4[40] = "ungg";
-  printf("Funcionalidad 3: Disco Completo\n");
-  printf("Ruta a la que copiar el disco completo:");
-  scanf("%s", file4);
-  cr_unload(0, NULL, file4);
-  printf("Disco copiado\n");
-
-  printf("-------------------------------------------------:\n");
+  crFILE* arch = cr_open(4, "Orgullo y Prejuicio.txt","w");
+  FILE* prueba = fopen("prueba.txt", "r");
+  char* texto = calloc(14000, sizeof(char));
+  fgets(texto, 10000, prueba);
+  int num = cr_write(arch, texto, 14000);
+  free(texto);
+  fclose(prueba);
+  cr_close(arch);
+  crFILE* arch2 = cr_open(4, "Orgullo y Prejuicio.txt","r");
+  char* buffer = calloc(3001, sizeof(char));
+  int num2 = cr_read(arch2, buffer, 3000);
+  printf("num bytes leidos = %d\n", num2);
+  printf("Extracto 1 = %s\n", buffer);
+  printf("\n\n\n");
+  char* buffer2 = calloc(5001, sizeof(char));
+  int num3 = cr_read(arch2, buffer2, 5000);
+  printf("num bytes leidos = %d\n", num3);
+  printf("Extracto 2 = %s\n", buffer2);
+  printf("\n\n\n");
+  char* buffer3 = calloc(6001, sizeof(char));
+  int num4 = cr_read(arch2, buffer3, 6000);
+  printf("num bytes leidos = %d\n", num4);
+  printf("Extracto 3 = %s\n", buffer3);
+  printf("\n\n\n");
+  char* buffer4 = calloc(1001, sizeof(char));
+  int num5 = cr_read(arch2, buffer4, 1000);
+  printf("num bytes leidos = %d\n", num5);
+  printf("Extracto 4 = %s\n", buffer4);
+  printf("\n\n\n");
+  free(buffer);
+  free(buffer2);
+  free(buffer3);
+  free(buffer4);
+  cr_close(arch2);
   destroy_directories();
   destroy_bitmaps();
 
