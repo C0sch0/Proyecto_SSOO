@@ -1588,7 +1588,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 }
 
 
-int cr_unload_particion_completa(unsigned disk, char* dest){
+void cr_unload_particion_completa(unsigned disk, char* dest){
 }
 
 int cr_unload(unsigned disk, char* orig, char* dest){
@@ -1616,6 +1616,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     }
   }
   else{
+    // Debemos copiar el archivo en "orig" en dest.
     crFILE *unload_file = cr_open(disk, orig, "r");
     char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
     cr_read(unload_file, buffer, unload_file->indice->file_size);
