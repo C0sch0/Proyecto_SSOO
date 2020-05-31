@@ -23,8 +23,15 @@ int main(int argc, char *argv[]) {
 
   create_dir_blocks();
   create_cr_bitmaps();
-
-
+  printf("En la particion 1 tenemos:\n");
+  printf("--- CR LS ---\n");
+  cr_ls(1);
+  char file1[40] =  "prueba.txt";
+  char file2[40] = "unload/copia_QPC.gif";
+  printf("Archivo copiado\n");
+  cr_load(1, file1);
+  printf("--- CR LS ---\n");
+  cr_ls(1);
   destroy_directories();
   destroy_bitmaps();
 
