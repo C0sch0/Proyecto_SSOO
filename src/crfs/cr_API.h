@@ -1589,7 +1589,6 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 
 
 void cr_unload_particion_completa(unsigned disk, char* dest){
-
 }
 
 int cr_unload(unsigned disk, char* orig, char* dest){
@@ -1643,5 +1642,23 @@ int cr_load(unsigned disk, char* orig){
 // En caso de que el sea una carpeta, se deben copiar los archivos que
 // esten dentro de esta carpeta, ignorando cualquier carpeta adicional que tenga.
 
+FILE *origen = fopen(orig, "rb");
+unsigned char buffer[2048];
+crFILE *file_1 = cr_open(orig, 'w');
+fseek(origen, 0L, SEEK_END);
+int size = ftell(origen);
+int uno;
+int read;
+fseek(origen, 0, SEEK_SET);
+//printf("[loop] %d\n", size);
+while ((uno = fread(buffer, 1, sizeof(buffer), origen)) > 0) {
+  read = read + uno;
+  //printf("[loop] size: %d | uno: %d | sizeof: %d\n", size, uno, (int)sizeof(buffer));
+  cr_write(file_1, buffer, uno);
+
+}
+//fclose(origen);
+cr_close(file_1);
+return 0;
 
 }

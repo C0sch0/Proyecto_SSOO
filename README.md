@@ -77,6 +77,7 @@ Lo primero que realizamos es revisar si el archivo que estamos recibiendo existe
 
 
 **int cr_rm(unsigned disk, char* filename):**
+Funcion para borrar archivos. Elimina el archivo referenciado por la ruta path del directorio correspondiente. Los bloques que estaban siendo usados por el archivo quedan libres si no existe ninguna otra referencia al archivo.
 
 **int cr_hardlink(unsigned disk, char* orig, char* dest):**
 
@@ -92,3 +93,5 @@ String orig sea NULL para indicar que quieren copiar todo un sector.
 
 **int cr_load(unsinged disk, char* orig):**
 Esta función se encarga de copia un archivo o los contenidos de una carpeta, referenciado por orig a la particion designada. En caso de que un archivo sea demasiado pesado para el disco, se escribe lo mas posible. Si es una carpeta, se copian todos sus archivos. Si contiene subdirectorios, estas no son movidos
+
+Se recibe una direccion de origen, la cual verificamos al buscar la existencia del archivo. Leemos la informacion desde la direccion dada y la procesamos para poder convertirla en un struct crFILE *file*. Para esto, leemos el archivo y guardamos su informacion en un *buffer* que contiene el contenido a guardar. Se asegura que el archivo se haya abierto en modo de escritura.
