@@ -10,8 +10,9 @@ Tamara Lues - 15638936
 
 Claudio Prieto - 1664039J
 
-Funciones:
 
+
+Funciones:
 
 **void cr_mount(char* diskname):** Toma el nombre del archivo binario escrito por consola (argv[1]) y lo setea como variable global (ruta_archivo) para ocupar durante la ejecucion del programa. Se controlan los posibles errores en el main para mantener el formato de retorno dado de esta funcion en el enunciado.
 **ERRORES:**
