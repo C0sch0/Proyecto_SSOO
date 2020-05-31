@@ -46,10 +46,11 @@ int main(int argc, char *argv[]) {
 
   printf("Funcionalidad 2: Particion\n");
   printf("Que particion ? (1-4):");
-  char file3[40] =  "guidedddt";
+  char direccion3[40] =  "/unload/";
   unsigned disk;
   scanf("%u", &disk);
-  cr_unload(disk, file1, file2);
+  cr_unload(disk, NULL, direccion3);
+  printf("Copiando todos los archivos de la particion %s a la carpeta unload");
   printf("Particion copiada\n");
 
   printf("-------------------------------------------------:\n");
