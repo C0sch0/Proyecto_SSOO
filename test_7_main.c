@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
   }
   create_dir_blocks();
   create_cr_bitmaps();
-  printf("UNLOAD\n");
+  printf("------------ TEST funciones UNLOAD ------------ \n");
   printf("-------------------------------------------------:\n");
   printf("Funcionalidad 1: Copiar un archivo\n");
   printf("En la particion 1 tenemos:\n");
