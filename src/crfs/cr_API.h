@@ -1616,7 +1616,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     }
   }
   else{
-    // Debemos copiar el archivo en "orig" en dest.
+    // Debemos copiar el archivo en "orig" en dest
     crFILE *unload_file = cr_open(disk, orig, "r");
     char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
     cr_read(unload_file, buffer, unload_file->indice->file_size);
