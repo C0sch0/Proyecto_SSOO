@@ -1589,6 +1589,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
 
 
 void cr_unload_particion_completa(unsigned disk, char* dest){
+
 }
 
 int cr_unload(unsigned disk, char* orig, char* dest){
