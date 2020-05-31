@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "structs.h"
+#include <string.h>
 
 #define PARTICIONES 4
 #define BLOCK_ENTRIES 256
@@ -1322,14 +1323,33 @@ int cr_rm(unsigned disk, char* filename) {
   int n_bloque_indice;
   int direction;
 
+  int hay_ind = 1;
+
+  int is_soft;
   FILE* disco = fopen(ruta_archivo, "r");
 
+  // Manejo de errores de input
+  if (disk < 1 || disk > 4){
+    printf("ERROR: Particion ingresada no es valida\n");
+    return 1;
+  }
   if (cr_exists(disk, filename)) {
     // Revisamos la cantidad de referencias del archivo en el bloque indice
     // Si es 1 debemos eliminar los datos en bitmap y bloque directorio
     // Si es < 1 debemos eliminar datos del bloque directorio y restar 1 a referencias
 
-    printf("Archivo existe\n");
+    // Revisamos si es un softlink
+    char* sl = strchr(filename, '/');
+    if(sl == NULL)
+    {
+      // No es softlink
+      is_soft = 0;
+    }
+    else 
+    {
+      // Si es softlink
+      is_soft = 1;
+    }
 
     for (int i =0; i< 256; i++)
     {
@@ -1348,95 +1368,124 @@ int cr_rm(unsigned disk, char* filename) {
         Dir_disk[disk-1] -> entries[i] -> number[0] &= ~(1 << 7);
         //Dir_disk[disk-1] -> entries[i] -> file_name = malloc(sizeof(char)*29);
 
+        //Actualizamos bloque directorio en el disco
+        FILE* disco_act = fopen(ruta_archivo, "rb+");
+        int f = disk - 1;
+        fseek(disco_act, 536870912*f + 32*i, SEEK_SET);
+        char* aux_linea = malloc(sizeof(char)*32);
+        memcpy(aux_linea, Dir_disk[disk-1] -> entries[i] -> number, 3);
+        memcpy(&(aux_linea[3]), Dir_disk[disk-1] -> entries[i] -> file_name, 29);
+        fwrite(aux_linea, 1, 32, disco_act);
+        free(aux_linea);
+        fclose(disco_act);
 
         free(st);
 
+        break;
+
       }
     }
 
-    // Seteamos el archivo en el bloque indice
-    fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
+    if (is_soft == 0){
+      // Seteamos el archivo en el bloque indice
+      fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
 
-    // Leemos el bloque indice
-    fread(indice_aux, 8192, 1, disco);
+      // Leemos el bloque indice
+      fread(indice_aux, 8192, 1, disco);
 
-    // Leemos el cuarto byte donde se guardan la cantidad de referencias que tiene el bloque indice
-    cant_ref = indice_aux[3];
-    //printf("%d\n", cant_ref);
+      // Leemos el cuarto byte donde se guardan la cantidad de referencias que tiene el bloque indice
+      cant_ref = indice_aux[3];
+      //printf("%d\n", cant_ref);
 
-    // Le restamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
-    cant_ref--;
+      // Le restamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
+      cant_ref--;
 
-    // Descomentar cuando se guarde lel bloque directorio para no tener inconsistencias en el archivo .bin
-    // indice_aux[3]--;
+      // Descomentar cuando se guarde lel bloque directorio para no tener inconsistencias en el archivo .bin
+      indice_aux[3]--;
 
-    // FILE* disco_w = fopen(ruta_archivo, "rb+");
+      FILE* disco_w = fopen(ruta_archivo, "rb+");
 
-    // fseek(disco_w, 8192 * n_bloque_indice, SEEK_SET);
+      fseek(disco_w, 8192 * n_bloque_indice, SEEK_SET);
 
-    // // Escribimos el bloque indice
-    // fwrite(indice_aux, 8192, 1, disco_w);
-    // fclose(disco_w);
+      // Escribimos el bloque indice
+      fwrite(indice_aux, 8192, 1, disco_w);
+      fclose(disco_w);
 
-    // Si el indice de referencias llega a cero
-    // recorremos el bloque y vemos todas los punteros a bloques de datos y actualizacmos el bitmap (Actualizamos a 0)
-    if (cant_ref == 0) {
-      for (int k = 0; k < 2044; k++) {
+      // Si el indice de referencias llega a cero
+      // recorremos el bloque y vemos todas los punteros a bloques de datos y actualizacmos el bitmap (Actualizamos a 0)
+      if (cant_ref == 0) {
+        for (int k = 0; k < 2044; k++) {
 
-        int q = 12+4*k;
+          int q = 12+4*k;
 
-        memcpy(dir, &(indice_aux[q]), 4);
-        int ref = buscar_ref(dir);
-        //printf("dir -> %d\n", ref);
+          memcpy(dir, &(indice_aux[q]), 4);
+          int ref = buscar_ref(dir);
+          //printf("dir -> %d\n", ref);
 
-        if (ref == 0) {
-          break;
+          if (ref == 0) {
+            hay_ind = 0;
+            break;
+          }
+          // Buscamos el bit
+          ref = ref - (65536*(disk - 1));
+
+          int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
+          //printf("Antes ---> %d\n", k);
+
+          // Cambiamos a cero el bit del bitmap
+          bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
+
+          int h = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
+          //printf("Despues ---> %d\n", h);
         }
-        // Buscamos el bit
-        ref = ref - (65536*(disk - 1));
-
-        int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
-        //printf("Antes ---> %d\n", k);
-
-        // Cambiamos a cero el bit del bitmap
-        bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
-
-
       }
+
+      if (hay_ind) {
+        // Buscamos el bit de direccionamiento indirecto
+        memcpy(dir, &(indice_aux[8188]), 4);
+        int ref = buscar_ref(dir);
+
+        // Seteamos el archivo en el bloque indice
+        fseek(disco, 8192 * ref, SEEK_SET);
+
+        char* i_indice_aux = malloc(sizeof(char)*8192);
+
+        // Leemos el bloque indice
+        fread(i_indice_aux, 8192, 1, disco);
+
+        for (int k = 0; k < 2044; k++) {
+
+            int q = 4*k;
+
+            memcpy(dir, &(i_indice_aux[q]), 4);
+            int ref = buscar_ref(dir);
+            
+            if (ref == 0) {
+            break;
+          }
+
+            // Buscamos el bit
+            ref = ref - (65536*(disk - 1));
+
+            int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
+            //printf("Antes ---> %d\n", k);
+
+            // Cambiamos a cero el bit del bitmap
+            bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
+        }
+      }
+
+      actualizar_bitmap(disk);
+
+      // Liberamos la memoria
+      free(indice_aux);
+      free(dir);
+      fclose(disco);
     }
-
-    // Buscamos el bit de direccionamiento indirecto
-    // memcpy(dir, &(indice_aux[8188]), 4);
-    // int ref = buscar_ref(dir);
-    // printf("dir -> %d\n", ref);
-
-    // int i_bloque_indice = get_bloque(ref);
-
-    // // Seteamos el archivo en el bloque indice
-    // fseek(disco, 8192 * i_bloque_indice, SEEK_SET);
-
-    // char* i_indice_aux = malloc(sizeof(char)*8192);
-
-    // // Leemos el bloque indice
-    // fread(i_indice_aux, 8192, 1, disco);
-
-
-    // for (int k = 0; k < 2044; k++) {
-
-    //     int q = 12+4*k;
-
-    //     memcpy(dir, &(i_indice_aux[q]), 4);
-    //     int ref = buscar_ref(dir);
-    //     printf("dir -> %d\n", ref);
-    // }
-
-    // Liberamos la memoria
-    free(indice_aux);
-    free(dir);
-    fclose(disco);
+    
 
   } else {
-    printf("Archivo no existe");
+    printf("ERROR: Archivo no existe\n");
   }
   return 0;
 }
@@ -1451,10 +1500,25 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
   char * nombre;
 
   int libre;
+
+  // Manejo de errores de input
+  if (disk < 1 || disk > 4){
+    printf("ERROR: Particion ingresada no es valida\n");
+    return 1;
+  }
+
   // Revisamos si el archivo origen existe
   if (cr_exists(disk, orig)) {
 
-    printf("Archivo existe\n");
+    // Revisamos si el nombre del archivo ya existe en la particion
+    for (int i =0; i< 256; i++)
+    {
+      if (strncmp(Dir_disk[disk-1]->entries[i]->file_name , dest, 32) == 0)
+      {
+        printf("ERROR: Ya existe un archivo con ese Nombre\n");
+        return 0;
+      }
+    }
 
     // Debemos buscar la referencia al bloque indice del archivo
     for (int i =0; i< 256; i++)
@@ -1494,14 +1558,16 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     // Le sumamos 1 al indice de referencia, tambien cambiamos el byte del bloque indice
 
     // Descomentar cuando se guarde lel bloque directorio para no tener inconsistencias en el archivo .bin
-    //aux[3]++;
+    aux[3]++;
 
-    // FILE* disco_w = fopen(ruta_archivo, "rb+");
+    FILE* disco_w = fopen(ruta_archivo, "rb+");
 
-    // fseek(disco_w, 8192 * n_bloque_indice, SEEK_SET);
+    fseek(disco_w, 8192 * n_bloque_indice, SEEK_SET);
 
-    // // Escribimos el bloque indice
-    // fwrite(aux, 8192, 1, disco_w);
+    // Escribimos el bloque indice
+    fwrite(aux, 8192, 1, disco_w);
+
+    free(aux);
 
     // Copiamos la informacion a una nueva entrada del directorio, con puntero al bloque indice del otro archivo
     // La parte "number" es igual a la del archivo original
@@ -1521,8 +1587,21 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     memcpy(Dir_disk[disk-1]-> entries[libre]->file_name, dest, 29);
     memcpy(Dir_disk[disk-1]-> entries[libre]->number, numero, 3);
 
+    //la posicion que tengo que cambiar es la i
+    FILE* disco_act = fopen(ruta_archivo, "rb+");
+    int f = disk - 1;
+    fseek(disco_act, 536870912*f + 32*libre, SEEK_SET);
+    char* aux_linea = malloc(sizeof(char)*32);
+    memcpy(aux_linea, numero, 3);
+    memcpy(&(aux_linea[3]), dest, 29);
+    fwrite(aux_linea, 1, 32, disco_act);
+    free(aux_linea);
+    fclose(disco_act);
+
+    //actualizar_bitmap(disk);
+
   } else {
-    printf("Archivo no existe\n");
+    printf("ERROR: Archivo origen no existe\n");
 
   }
 
@@ -1530,20 +1609,52 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
   return 0;
 }
 
-int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) {
+
+int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
   FILE* disco = fopen(ruta_archivo, "r");
 
   int n_bloque_indice;
 
+  char * nombre_f = malloc(sizeof(char)*29);
+
   char * numero;
   char * nombre;
 
   int libre;
+  
+  // Manejo de errores de input
+  if (disk_orig < 1 || disk_orig > 4){
+    printf("ERROR: Particion origen ingresada no es valida\n");
+    return 1;
+  }
+
+  if (disk_dest < 1 || disk_dest > 4){
+    printf("ERROR: Particion destino ingresada no es valida\n");
+    return 1;
+  }
+
+  // Generamos el nonmbre del soflink a partir del input
+  char * copy_n = malloc(sizeof(char)*29);
+  strcpy(copy_n, orig);
+  
+  sprintf(nombre_f, "%u", disk_orig);
+
+  strcat(nombre_f, "/");
+  strcat(nombre_f, copy_n);
+
   // Revisamos si el archivo origen existe
   if (cr_exists(disk_orig, orig)) {
 
-    printf("Archivo existe\n");
+    // Revisamos si el nombre del archivo ya existe en la particion
+    for (int i =0; i< 256; i++)
+    {
+      if (strncmp(Dir_disk[disk_dest-1]->entries[i]->file_name , nombre_f, 32) == 0)
+      {
+        printf("ERROR: Ya existe un archivo con ese Nombre\n");
+        return 0;
+      }
+    }
 
     // Debemos buscar la referencia al bloque indice del archivo
     for (int i =0; i< 256; i++)
@@ -1575,11 +1686,22 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig, char* dest) 
     }
 
     Dir_disk[disk_dest-1]-> entries[libre] = entry_init();
-    memcpy(Dir_disk[disk_dest-1]-> entries[libre]->file_name, dest, 29);
+    memcpy(Dir_disk[disk_dest-1]-> entries[libre]->file_name, nombre_f, 29);
     memcpy(Dir_disk[disk_dest-1]-> entries[libre]->number, numero, 3);
 
+    //la posicion que tengo que cambiar es la i
+    FILE* disco_act = fopen(ruta_archivo, "rb+");
+    int f = disk_dest - 1;
+    fseek(disco_act, 536870912*f + 32*libre, SEEK_SET);
+    char* aux_linea = malloc(sizeof(char)*32);
+    memcpy(aux_linea, numero, 3);
+    memcpy(&(aux_linea[3]), nombre_f, 29);
+    fwrite(aux_linea, 1, 32, disco_act);
+    free(aux_linea);
+    fclose(disco_act);
+
   } else {
-    printf("Archivo no existe\n");
+    printf("ERROR: Archivo origen no existe\n");
 
   }
 
