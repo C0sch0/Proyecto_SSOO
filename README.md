@@ -85,18 +85,28 @@ Funcion para borrar archivos. Elimina el archivo referenciado por la ruta path d
 **int cr_softlink(unsigned disk_orig, unsigned disk_dest, char* orig, char* dest)**
 
 **int cr_unload(unsinged disk, char* orig, char* dest):**
+Funcion que se encarga de copiar un archivo, particion completa o disco a una direccion dada.
 
-Copia un archivo, particion o disco.  
-(disk ∈ {1,...,4}, complete_disk = 0)
+
 
 String orig sea NULL para indicar que quieren copiar todo un sector.
+Para (disk ∈ {1,...,4})
+
+(disk = 0)
+
 
 
 **int cr_load(unsinged disk, char* orig):**
-Esta función se encarga de copiar un archivo o los contenidos de una carpeta, referenciado por orig a la particion designada. En caso de que un archivo sea demasiado pesado para el disco, se escribe lo mas posible. Si es una carpeta, se copian todos sus archivos. Si contiene subdirectorios, estas no son movidos
 
-Se recibe una direccion de origen, con la cual verificamos al buscar la existencia del archivo. Leemos la informacion desde la direccion dada y la procesamos para poder convertirla en un struct crFILE *file*. Para esto, leemos el archivo y guardamos su informacion en un *buffer* que contiene el contenido a guardar. Se asegura que el archivo se haya abierto en modo de escritura.
+Sirve para introducir archivos nuevos al disco.
+Esta función se encarga de copiar un archivo referenciado por orig a la particion designada.
 
-Dada la estructura de los bloques ındice, sus archivos tienen un tamano maximo. Si esta escribiendo un archivo y este supera ese tamano maximo, no debe eliminar el archivo, sino que debe dejar almacenado el maximo de datos posible y retornar el valor apropiado desde cr_write.
+En caso de que un archivo sea demasiado pesado para el disco, se escribe lo mas posible.
+
+Si es una carpeta, se copian todos sus archivos. Si contiene subdirectorios, estos no son tomados en cuenta.
+
+Se recibe una direccion de origen, con la cual verificamos al buscar la existencia del archivo. Leemos la informacion desde la direccion dada y la procesamos para poder convertirla en un struct crFILE *file*. Para esto, leemos el archivo y guardamos su informacion en un *buffer* que contiene el contenido a guardar. Se asegura que el archivo se haya abierto en modo de escritura. En caso de ser carpeta, este proceso se repite para cada uno de sus archivos.
+
+Los archivos tienen un tamano maximo dada la estructura de los bloques. Si esta escribiendo un archivo y este supera ese tamano maximo, no se elimina el archivo, y se deja almacenado el maximo de datos posible y retornar el valor apropiado desde cr_write.
 
 Si se escribe un archivo y ya no queda espacio disponible en el disco virtual, termina la escritura y da aviso de que esta no fue realizada en su totalidad mediante un mensaje de error en stderr y no se elimina el archivo que estaba siendo escrito.

@@ -24,10 +24,16 @@ int main(int argc, char *argv[]) {
   create_dir_blocks();
   create_cr_bitmaps();
 
-  char file1[20] =  "guides.txt";
-  char file2[20] = "copia_guides.txt";
+  char file1[40] =  "guides.txt";
+  char file2[40] = "copia_guides.txt";
+  printf("Funcionalidad 1: Copiar un archivo\n");
+  printf("Copiaremos el archivo de nombre guides.txt, de la particion 1\n");
   cr_ls(1);
   printf("-------------------------------------------------:\n");
+  printf("Funcionalidad 2: Particion\n");
+  cr_unload(1, file1, file2);
+  printf("-------------------------------------------------:\n");
+  printf("Funcionalidad 3: Disco Completo\n");
   cr_unload(1, file1, file2);
   printf("-------------------------------------------------:\n");
   cr_ls(1);

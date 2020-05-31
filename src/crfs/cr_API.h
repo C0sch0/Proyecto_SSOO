@@ -1592,10 +1592,7 @@ void cr_unload_particion_completa(unsigned disk, char* dest){
 }
 
 int cr_unload(unsigned disk, char* orig, char* dest){
-  // Funcion que se encarga de copiar un archivo,
-  // la particion completa (disk ∈ {1,...,4}) o el disco completo (disk = 0) ,
-  // referenciado por orig, hacia un nuevo archivo o directorio de ruta dest
-  // en su computador.
+
   if (disk < 0 || disk > PARTICIONES){
     printf("Input disco incorrecto\n");
     return -1;
@@ -1617,25 +1614,27 @@ int cr_unload(unsigned disk, char* orig, char* dest){
   }
   else{
     // Debemos copiar el archivo en "orig" en dest
-    crFILE *unload_file = cr_open(disk, orig, "r");
-    char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
-    cr_read(unload_file, buffer, unload_file->indice->file_size);
-    FILE *move_to;
-    if ((move_to = fopen(dest, "wb")) == NULL)
-    {
-      printf("PATH INCORRECTO (%s)\n", dest);
-      return -1;
+    if (cr_exists(disk, orig)) {
+      crFILE *unload_file = cr_open(disk, orig, "r");
+      char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
+      cr_read(unload_file, buffer, unload_file->indice->file_size);
+      FILE *move_to;
+      if ((move_to = fopen(dest, "wb")) == NULL)
+      {
+        printf("PATH INCORRECTO (%s)\n", dest);
+        return -1;
+      }
+      fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
+      fclose(move_to);
+      free(buffer);
+      return 1;
     }
-    fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
-    fclose(move_to);
-    free(buffer);
-    return 1;
+
   }
 }
 
 
 int cr_load(unsigned disk, char* orig){
-
 // Funcio ́n que se encarga de copiar un archivo o los contenidos de
 // una carpeta, referenciado por orig a la particio ́n designada.
 // En caso de que un archivo sea demasiado pesado para el disco,
@@ -1651,9 +1650,11 @@ int cr_load(unsigned disk, char* orig){
     printf("orig NULL\n");
     return -1;
   }
-  unsigned char buffer[2048];
-  cr_write(crFILE* file, void* buffer, int n_bytes);
 
+  Entry_aux entrada_aux;
+  FILE* archivo = fopen(orig, "r");
+  fread(&entrada_aux, 32, 1, archivo);
+  printf("%s\n", entrada_aux.file_name);
   return 0;
 
 }
