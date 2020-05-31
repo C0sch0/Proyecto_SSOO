@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
   printf("Funcionalidad 1: Copiar un archivo\n");
   printf("En la particion 1 tenemos:\n");
-  printf("--- CR LS ---\n");
+  printf("------------ CR LS ------------\n");
   cr_ls(1);
   printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
   printf("En ruta apuntaremos a la carpeta ./unload/\n");
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
   unsigned disk;
 
   scanf("%u", &disk);
-  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", disk, direccion3);
+  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", direccion3);
   cr_unload(disk, NULL, direccion3);
   printf("=== Particion copiada ===\n");
 
@@ -58,8 +58,10 @@ int main(int argc, char *argv[]) {
   char file4[40] = "ungg";
   printf("Funcionalidad 3: Disco Completo\n");
   printf("Ruta a la que copiar el disco completo:");
-  scanf("%s", file4);
-  cr_unload(0, NULL, file4);
+
+  //scanf("%s", file4);
+  printf("Copiando todos los archivos del disco a la carpeta %s \n", direccion3);
+  cr_unload(0, NULL, direccion3); //file4
   printf("Disco copiado\n");
 
   printf("-------------------------------------------------:\n");

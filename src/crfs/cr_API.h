@@ -1709,17 +1709,19 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 }
 
 
+#define UNLOAD_DIR "unload/"
+
 void cr_unload_particion_completa(unsigned disk, char* dest){
   Directory* disco = Dir_disk[disk-1];
-  char* nombre = dest;
   for (int i =0; i< BLOCK_ENTRIES; i++)
   {
     Entry* entrada = disco->entries[i];
     int a = !!((entrada->number[0] << 1) & 0x800000);
     if (a == 1){
-      strcat(nombre, "copia_");
-      strcat(nombre, entrada->file_name);
-      cr_unload(disk, entrada->file_name, nombre);
+      strcat(dest, "copia_");
+      strcat(dest, entrada->file_name);
+      cr_unload(disk, entrada->file_name, dest);
+      // memcpy(file->file_name, nombre_a_copiar, 29);
     }
   }
 }
@@ -1732,7 +1734,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
   }
 
   if (orig == NULL) {
-    // indica que quieren copiar todo un sector. Particion o Disco ?
+    // indica que quieren copiar todo un sector. Particion o Disco completo?
     if (disk == 0){
       for (int partition = 1; partition < PARTICIONES + 1; partition++){
         cr_unload_particion_completa(partition, dest);
@@ -1776,15 +1778,27 @@ int cr_load(unsigned disk, char* orig){
 // esten dentro de esta carpeta, ignorando cualquier carpeta adicional que tenga.
 
   if (disk < 0 || disk > PARTICIONES){
-    printf("Input disco incorrecto\n");
+    printf("ERROR: Input disco incorrecto\n");
     return -1;
   }
   if (orig == NULL) {
-    printf("orig NULL\n");
+    printf("ERROR: orig NULL\n");
     return -1;
+  }
+  int archivo = 1;
+  if (archivo) {
+    crFILE* arch2 = cr_open(disk, orig, "w");
+    char* buffer = calloc(1001, sizeof(char));
+    if(arch2 != NULL){
+      int num2 = cr_read(arch2, buffer, 1000);
+      cr_close(arch2);
+    }
+    free(buffer);
+
+  }
+  else{
   }
 
 
-  cr_open(disk, orig, "w");
   return 0;
 }
