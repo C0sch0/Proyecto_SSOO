@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   printf("Archivos en particion 1\n");
   cr_ls(1);
   printf("\n\n");
-  printf("Archivos en particion 1\n");
+  printf("Archivos en particion 2\n");
   cr_ls(2);
   printf("\n\n");
 
