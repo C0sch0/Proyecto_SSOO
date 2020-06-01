@@ -1710,8 +1710,6 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 }
 
 
-#define UNLOAD_DIR "unload/"
-
 void cr_unload_particion_completa(unsigned disk, char* dest){
   Directory* disco = Dir_disk[disk-1];
   for (int i =0; i< BLOCK_ENTRIES; i++)
