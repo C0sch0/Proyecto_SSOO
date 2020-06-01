@@ -23,10 +23,10 @@ int main(int argc, char *argv[]) {
 
   create_dir_blocks();
   create_cr_bitmaps();
-  cr_bitmap(4,1);
-  crFILE* arch = cr_open(4, "Orgullo y Prejuicio2.txt","w");
-  cr_close(arch);
-  cr_bitmap(4,0);
+  //cr_bitmap(4,1);
+  //crFILE* arch = cr_open(4, "Orgullo y Prejuicio2.txt","w");
+  //cr_close(arch);
+  //cr_bitmap(4,0);
   //cr_bitmap(0, 1);
   printf("-----------------------------------------------------------------------\n");
   printf("------------------------ TEST funciones LOAD ------------------------ \n");
