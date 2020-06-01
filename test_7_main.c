@@ -45,7 +45,6 @@ int main(int argc, char *argv[]) {
   printf("Archivo copiado desde %s a ruta especifica %s\n", gif_info, gif_new_info);
   printf("Archivo copiado desde %s a ruta especifica %s\n", file2, file2_new_info2);
 
-
   printf("-------------------------------------------------\n");
   printf("Funcionalidad 2: Particion completa de disco.\n");
   printf("Que particion desea copiar a < unload/ >  ? (1-4):");

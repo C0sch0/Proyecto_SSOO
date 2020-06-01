@@ -1757,8 +1757,8 @@ int cr_unload(unsigned disk, char* orig, char* dest){
         char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
         cr_read(unload_file, buffer, unload_file->indice->file_size);
         FILE *move_to;
-        if ((move_to = fopen(dest, "wb")) == NULL)
-        {
+        
+        if ((move_to = fopen(dest, "wb")) == NULL){
           printf("PATH INCORRECTO (%s)\n", dest);
           return 0;
         }
