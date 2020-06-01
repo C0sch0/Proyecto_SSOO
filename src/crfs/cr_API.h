@@ -1327,7 +1327,7 @@ int cr_rm(unsigned disk, char* filename) {
   int hay_ind = 1;
 
   int is_soft;
-  
+
 
   // Manejo de errores de input
   if (disk < 1 || disk > 4){
@@ -1462,7 +1462,7 @@ int cr_rm(unsigned disk, char* filename) {
 
           memcpy(dir, &(i_indice_aux[q]), 4);
           int ref = buscar_ref(dir);
-          
+
           if (ref == 0) {
           break;
           }
@@ -1479,11 +1479,11 @@ int cr_rm(unsigned disk, char* filename) {
         }
       }
 
-      
+
 
       actualizar_bitmap(disk);
 
-      
+
       fclose(disco);
     }
     // Liberamos la memoria
@@ -1502,7 +1502,7 @@ int cr_rm(unsigned disk, char* filename) {
 
 int cr_hardlink (unsigned disk, char* orig, char* dest) {
 
-  
+
 
   int n_bloque_indice;
 
@@ -1596,7 +1596,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
         break;
       }
     }
-    
+
     free(Dir_disk[disk-1]-> entries[libre]->file_name);
     free(Dir_disk[disk-1]-> entries[libre]->number);
     free(Dir_disk[disk-1]-> entries[libre]);
@@ -1795,6 +1795,8 @@ int cr_unload(unsigned disk, char* orig, char* dest){
           fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
           fclose(move_to);
           free(buffer);
+          free(token);
+          free(nuevo_nombre);
           return 1;
         }
         fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
