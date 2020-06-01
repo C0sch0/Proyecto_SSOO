@@ -1791,14 +1791,14 @@ int cr_load(unsigned disk, char* orig){
   int carpeta = 0;
   // chequear si es carpeta al verificar su primer letra
   if (!carpeta) {
-    FILE *file_to_upload = fopen(orig,"rb");
+    FILE *file_to_upload = fopen("prueba.txt","rb");
     if(!file_to_upload){
       printf("Archivo no encontrado !\n");
       return 0;
     }
     printf("Archivo encontrado !\n");
     // abrimos archivo en disco
-    crFILE *new_upload = cr_open(disk, orig, "w");
+    crFILE *new_upload = cr_open(disk, "prueba.txt", "w");
     char* texto = calloc(14000, sizeof(char));
     fgets(texto, 10000, file_to_upload);
     if(new_upload != NULL){
@@ -1806,9 +1806,8 @@ int cr_load(unsigned disk, char* orig){
       cr_close(new_upload);
     }
     free(texto);
-    fclose(new_upload);
+    fclose(file_to_upload);
     return 1;
-
   }
   else{
     // carpeta
