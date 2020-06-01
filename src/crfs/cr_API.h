@@ -1777,12 +1777,11 @@ int cr_unload(unsigned disk, char* orig, char* dest){
         cr_read(unload_file, buffer, unload_file->indice->file_size);
         FILE *move_to;
         if ((move_to = fopen(dest, "wb")) == NULL){
-
           // Esto es un softlink, debemos parsear nombre
           char* nuevo_nombre = malloc(sizeof(char)*32);
           char *token;
           token = strtok(dest, "/");
-          printf("carpeta: %s\n", token);
+          //printf("carpeta: %s\n", token);
           memcpy(nuevo_nombre, token, 32);
           strcat(nuevo_nombre, "/s_");
           token = strtok(NULL, "/");
@@ -1795,7 +1794,6 @@ int cr_unload(unsigned disk, char* orig, char* dest){
           fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
           fclose(move_to);
           free(buffer);
-          free(token);
           free(nuevo_nombre);
           return 1;
         }
