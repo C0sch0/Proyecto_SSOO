@@ -1841,6 +1841,7 @@ int cr_load(unsigned disk, char* orig){
     crFILE *new_upload = cr_open(disk, orig, "w");
     if(new_upload == NULL){
       printf("Error en escritura !\n");
+      fclose(file_to_upload);
       return 0;
     }
     // Rellenar informacion dentro de archivo en particion
