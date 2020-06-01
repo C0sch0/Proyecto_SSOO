@@ -1796,9 +1796,10 @@ int cr_load(unsigned disk, char* orig){
   if (!carpeta) {
     FILE *file_to_upload = fopen(orig,"rb");
     if(!file_to_upload){
-      printf("Archivo - %s - no encontrado !\n", orig);
+      printf("- Archivo - %s - no encontrado !\n", orig);
       return 0;
     }
+
     printf("Archivo - %s - encontrado !\n", orig);
     // abrimos archivo en disco
     crFILE *new_upload = cr_open(disk, orig, "w");
@@ -1806,12 +1807,20 @@ int cr_load(unsigned disk, char* orig){
       printf("Error en escritura !\n");
       return 0;
     }
-    char* texto = calloc(14000, sizeof(char));
-    fgets(texto, 10000, file_to_upload);
-    int num = cr_write(new_upload, texto, 14000);
-    cr_close(new_upload);
-    free(texto);
+    void* buffer = malloc(sizeof(char)*32);
+    char block_read[32];
+    while(fread(block_read, sizeof(block_read), 1, file_to_upload)){
+      buffer = block_read;
+      int escribir = cr_write(new_upload, buffer, 32);
+    }
     fclose(file_to_upload);
+
+    //char* texto = calloc(14000, sizeof(char));
+    //fgets(texto, 10000, file_to_upload);
+    //int num = cr_write(new_upload, texto, 14000);
+    //cr_close(new_upload);
+    //free(texto);
+    //fclose(file_to_upload);
     return 1;
   }
   else{
@@ -1838,7 +1847,6 @@ int cr_load(unsigned disk, char* orig){
         if (strncmp(".", dir->d_name, 1) != 0) {
           cr_load(disk, dir->d_name);
         }
-
       }
       closedir(d);
     }
