@@ -1442,9 +1442,8 @@ int cr_rm(unsigned disk, char* filename) {
           int h = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
           //printf("Despues ---> %d\n", h);
         }
-      }
 
-      if (hay_ind) {
+        if (hay_ind) {
         // Buscamos el bit de direccionamiento indirecto
         memcpy(dir, &(indice_aux[8188]), 4);
         int ref = buscar_ref(dir);
@@ -1459,33 +1458,37 @@ int cr_rm(unsigned disk, char* filename) {
 
         for (int k = 0; k < 2044; k++) {
 
-            int q = 4*k;
+          int q = 4*k;
 
-            memcpy(dir, &(i_indice_aux[q]), 4);
-            int ref = buscar_ref(dir);
-
-            if (ref == 0) {
-            break;
+          memcpy(dir, &(i_indice_aux[q]), 4);
+          int ref = buscar_ref(dir);
+          
+          if (ref == 0) {
+          break;
           }
 
-            // Buscamos el bit
-            ref = ref - (65536*(disk - 1));
+          // Buscamos el bit
+          ref = ref - (65536*(disk - 1));
 
-            int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
-            //printf("Antes ---> %d\n", k);
+          int k = !!((bitmaps[disk - 1] -> map[ref / 8] << (ref % 8)) & 0x80);
+          //printf("Antes ---> %d\n", k);
 
-            // Cambiamos a cero el bit del bitmap
-            bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
+          // Cambiamos a cero el bit del bitmap
+          bitmaps[disk - 1]->map[ref / 8] &= ~(1 << (ref % 8));
+          }
         }
       }
 
+      
+
       actualizar_bitmap(disk);
 
-      // Liberamos la memoria
-      free(indice_aux);
-      free(dir);
+      
       fclose(disco);
     }
+    // Liberamos la memoria
+    free(indice_aux);
+    free(dir);
 
 
   } else {
@@ -1520,7 +1523,9 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     // Revisamos si el nombre del archivo ya existe en la particion
     for (int i =0; i< 256; i++)
     {
-      if (strncmp(Dir_disk[disk-1]->entries[i]->file_name , dest, 32) == 0)
+      int a = !!((Dir_disk[disk-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 1 && strncmp(Dir_disk[disk-1]->entries[i]->file_name , dest, 32) == 0)
       {
         printf("ERROR: Ya existe un archivo con ese Nombre\n");
         return 1;
@@ -1591,6 +1596,10 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
         break;
       }
     }
+    
+    free(Dir_disk[disk-1]-> entries[libre]->file_name);
+    free(Dir_disk[disk-1]-> entries[libre]->number);
+    free(Dir_disk[disk-1]-> entries[libre]);
 
     Dir_disk[disk-1]-> entries[libre] = entry_init();
     memcpy(Dir_disk[disk-1]-> entries[libre]->file_name, dest, 29);
@@ -1622,7 +1631,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
   int n_bloque_indice;
 
-  char * nombre_f = malloc(sizeof(char)*29);
+  char nombre_f[29] = "";
 
   char * numero;
   char * nombre;
@@ -1632,13 +1641,11 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
   // Manejo de errores de input
   if (disk_orig < 1 || disk_orig > 4){
     printf("ERROR: Particion origen ingresada no es valida\n");
-    free(nombre_f);
     return 1;
   }
 
   if (disk_dest < 1 || disk_dest > 4){
     printf("ERROR: Particion destino ingresada no es valida\n");
-    free(nombre_f);
     return 1;
   }
 
@@ -1658,10 +1665,11 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
     // Revisamos si el nombre del archivo ya existe en la particion
     for (int i =0; i< 256; i++)
     {
-      if (strncmp(Dir_disk[disk_dest-1]->entries[i]->file_name , nombre_f, 32) == 0)
+      int a = !!((Dir_disk[disk_dest-1] -> entries[i] -> number[0] << 1) & 0x800000);
+
+      if (a == 1 && strncmp(Dir_disk[disk_dest-1]->entries[i]->file_name , nombre_f, 32) == 0)
       {
         printf("ERROR: Ya existe un archivo con ese Nombre\n");
-        free(nombre_f);
         return 1;
       }
     }
@@ -1713,10 +1721,9 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
     free(aux_linea);
     fclose(disco_act);
 
-    free(nombre_f);
+
   } else {
     printf("ERROR: Archivo origen no existe\n");
-    free(nombre_f);
     return 1;
   }
 
