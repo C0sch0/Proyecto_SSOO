@@ -1847,6 +1847,7 @@ int cr_load(unsigned disk, char* orig){
       int escribir = cr_write(new_upload, buffer, 32);
     }
     fclose(file_to_upload);
+    free(buffer);
 
     //char* texto = calloc(14000, sizeof(char));
     //fgets(texto, 10000, file_to_upload);
