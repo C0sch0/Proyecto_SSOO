@@ -22,21 +22,29 @@ int main(int argc, char *argv[]) {
   }
   create_dir_blocks();
   create_cr_bitmaps();
-  printf("------------ TEST funciones UNLOAD ------------ \n");
-  printf("-------------------------------------------------:\n");
+  printf("-----------------------------------------------------------------------\n");
+  printf("------------------------ TEST funciones UNLOAD ------------------------ \n");
+  printf("-----------------------------------------------------------------------\n");
   printf("Funcionalidad 1: Copiar un archivo\n");
   printf("En la particion 1 tenemos:\n");
   printf("------------ CR LS ------------\n");
   cr_ls(1);
-  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
+  printf("------------ FIN CR LS ------------\n");
+  printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
+  printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
   printf("En ruta apuntaremos a la carpeta ./unload/\n");
 
   char file1[40] =  "QPC.gif";
-  char file2[40] = "unload/copia_QPC.gif";
+  char file2[40] =  "guides.txt";
+  char dest1[40] = "unload/copia_QPC.gif";
+  char dest2[40] = "unload/copia_guides.txt";
 
-  cr_unload(1, file1, file2);
+  cr_unload(1, file1, dest1);
+  cr_unload(1, file2, dest2);
   printf("Archivo copiado desde ./guides.txt a ./unload/copy_guides.txt\n");
-  printf(" \n" );
+  printf("------------ CR LS ------------\n");
+  cr_ls(1);
+  printf("------------ FIN CR LS ------------\n");
 
   printf("-------------------------------------------------\n");
 
@@ -46,7 +54,7 @@ int main(int argc, char *argv[]) {
   unsigned disk;
 
   scanf("%u", &disk);
-  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", direccion3);
+  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", disk, direccion3);
   cr_unload(disk, NULL, direccion3);
   printf("=== Particion copiada ===\n");
 

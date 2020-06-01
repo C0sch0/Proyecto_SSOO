@@ -1713,15 +1713,16 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
 void cr_unload_particion_completa(unsigned disk, char* dest){
   Directory* disco = Dir_disk[disk-1];
-  printf("dest:   %s\n", dest);
   for (int i =0; i< BLOCK_ENTRIES; i++)
   {
     Entry* entrada = disco->entries[i];
+    char new_file[32];
     int a = !!((entrada->number[0] << 1) & 0x800000);
     if (a == 1){
-      strcat(dest, "copia_");
-      strcat(dest, entrada->file_name);
-      cr_unload(disk, entrada->file_name, dest);
+      memcpy(new_file, "copia_", strlen(new_file)+1);
+      memcpy(new_file, entrada->file_name, strlen(new_file)+1);
+      printf("%s\n", new_file);
+      cr_unload(disk, entrada->file_name, new_file);
       // memcpy(file->file_name, nombre_a_copiar, 29);
     }
   }
@@ -1758,7 +1759,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
       if ((move_to = fopen(dest, "wb")) == NULL)
       {
         printf("PATH INCORRECTO (%s)\n", dest);
-        return -1;
+        return 0;
       }
       fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
       fclose(move_to);
