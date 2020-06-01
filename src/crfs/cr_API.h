@@ -1739,7 +1739,7 @@ void cr_unload_particion_completa(unsigned disk, char* dest){
     Entry* entrada = disco->entries[i];
     int a = !!((entrada->number[0] << 1) & 0x800000);
     if (a == 1){
-      char* nuevo_nombre = malloc(sizeof(char)*32);
+      char* nuevo_nombre = malloc(sizeof(char)*32+1);
       memcpy(nuevo_nombre, dest, 32);
       strcat(nuevo_nombre,entrada->file_name);
       cr_unload(disk, entrada->file_name, nuevo_nombre);
@@ -1780,7 +1780,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
 
         if ((move_to = fopen(dest, "wb")) == NULL){
           // Esto es un softlink, debemos parsear nombre
-          char* nuevo_nombre = malloc(sizeof(char)*32);
+          char* nuevo_nombre = malloc(sizeof(char)*32+1);
           char *token;
           token = strtok(dest, "/");
           //printf("carpeta: %s\n", token);
@@ -1797,10 +1797,12 @@ int cr_unload(unsigned disk, char* orig, char* dest){
           fclose(move_to);
           free(buffer);
           free(nuevo_nombre);
+          cr_close(unload_file);
           return 1;
         }
         fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
         fclose(move_to);
+        cr_close(unload_file);
         free(buffer);
         return 1;
       }
@@ -1848,6 +1850,7 @@ int cr_load(unsigned disk, char* orig){
       buffer = block_read;
       int escribir = cr_write(new_upload, buffer, 32);
     }
+    cr_close(new_upload);
     fclose(file_to_upload);
     free(buffer);
 
