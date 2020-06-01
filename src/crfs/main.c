@@ -22,6 +22,8 @@ int main(int argc, char *argv[]) {
   }
   create_dir_blocks();
   create_cr_bitmaps();
+  char destino1[40] = "unload/QPC.gif";
+  char destino2[40] = "unload/guides.txt";
   printf("-----------------------------------------------------------------------\n");
   printf("------------------------ TEST funciones UNLOAD ------------------------ \n");
   printf("-----------------------------------------------------------------------\n");
@@ -31,16 +33,14 @@ int main(int argc, char *argv[]) {
   cr_ls(1);
   printf("------------ FIN CR LS ------------\n");
   printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
-  printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
+  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
   printf("En ruta apuntaremos a la carpeta ./unload/\n");
 
   char file1[40] =  "QPC.gif";
   char file2[40] =  "guides.txt";
-  char dest1[40] = "unload/copia_QPC.gif";
-  char dest2[40] = "unload/copia_guides.txt";
-
-  cr_unload(1, file1, dest1);
-  cr_unload(1, file2, dest2);
+  char destino[40] = "/unload/";
+  cr_unload(1, file1, destino);
+  cr_unload(1, file2, destino);
   printf("Archivo copiado desde ./guides.txt a ./unload/copy_guides.txt\n");
   printf("------------ CR LS ------------\n");
   cr_ls(1);

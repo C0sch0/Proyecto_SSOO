@@ -1716,13 +1716,10 @@ void cr_unload_particion_completa(unsigned disk, char* dest){
   for (int i =0; i< BLOCK_ENTRIES; i++)
   {
     Entry* entrada = disco->entries[i];
-    char new_file[32];
     int a = !!((entrada->number[0] << 1) & 0x800000);
     if (a == 1){
-      memcpy(new_file, "copia_", strlen(new_file)+1);
-      memcpy(new_file, entrada->file_name, strlen(new_file)+1);
-      printf("%s\n", new_file);
-      cr_unload(disk, entrada->file_name, new_file);
+      strcat(dest, entrada->file_name);
+      cr_unload(disk, entrada->file_name, dest);
       // memcpy(file->file_name, nombre_a_copiar, 29);
     }
   }
