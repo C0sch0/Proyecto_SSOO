@@ -1773,7 +1773,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     if (cr_exists(disk, orig)) {
       crFILE *unload_file = cr_open(disk, orig, "r");
       if (unload_file) {
-        char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
+        char* buffer = calloc(unload_file->indice->file_size, sizeof(char)*32);
         cr_read(unload_file, buffer, unload_file->indice->file_size);
         FILE *move_to;
         if ((move_to = fopen(dest, "wb")) == NULL){
