@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <dirent.h>
+#include <stdio.h>
 #include "structs.h"
 
 #define PARTICIONES 4
@@ -1346,7 +1348,7 @@ int cr_rm(unsigned disk, char* filename) {
       // No es softlink
       is_soft = 0;
     }
-    else 
+    else
     {
       // Si es softlink
       is_soft = 1;
@@ -1487,7 +1489,7 @@ int cr_rm(unsigned disk, char* filename) {
     // Liberamos la memoria
     free(indice_aux);
     free(dir);
-    
+
 
   } else {
     printf("ERROR: Archivo no existe\n");
@@ -1629,31 +1631,28 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
   int n_bloque_indice;
 
-  //char * nombre_f = malloc(sizeof(char)*29);
   char nombre_f[29] = "";
 
   char * numero;
   char * nombre;
 
   int libre;
-  
+
   // Manejo de errores de input
   if (disk_orig < 1 || disk_orig > 4){
     printf("ERROR: Particion origen ingresada no es valida\n");
-    //free(nombre_f);
     return 1;
   }
 
   if (disk_dest < 1 || disk_dest > 4){
     printf("ERROR: Particion destino ingresada no es valida\n");
-    //free(nombre_f);
     return 1;
   }
 
   // Generamos el nonmbre del soflink a partir del input
   char * copy_n = malloc(sizeof(char)*29);
   strcpy(copy_n, orig);
-  
+
   sprintf(nombre_f, "%u", disk_orig);
 
   strcat(nombre_f, "/");
@@ -1671,7 +1670,6 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
       if (a == 1 && strncmp(Dir_disk[disk_dest-1]->entries[i]->file_name , nombre_f, 32) == 0)
       {
         printf("ERROR: Ya existe un archivo con ese Nombre\n");
-        //free(nombre_f);
         return 1;
       }
     }
@@ -1723,11 +1721,9 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
     free(aux_linea);
     fclose(disco_act);
 
-    //free(nombre_f);
 
   } else {
     printf("ERROR: Archivo origen no existe\n");
-    //free(nombre_f);
     return 1;
   }
 
@@ -1738,28 +1734,29 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
 void cr_unload_particion_completa(unsigned disk, char* dest){
   Directory* disco = Dir_disk[disk-1];
-  char* nombre = dest;
   for (int i =0; i< BLOCK_ENTRIES; i++)
   {
     Entry* entrada = disco->entries[i];
     int a = !!((entrada->number[0] << 1) & 0x800000);
     if (a == 1){
-      strcat(nombre, "copia_");
-      strcat(nombre, entrada->file_name);
-      cr_unload(disk, entrada->file_name, nombre);
+      char* nuevo_nombre = malloc(sizeof(char)*32);
+      memcpy(nuevo_nombre, dest, 32);
+      strcat(nuevo_nombre,entrada->file_name);
+      cr_unload(disk, entrada->file_name, nuevo_nombre);
+      free(nuevo_nombre);
     }
+
   }
 }
 
 int cr_unload(unsigned disk, char* orig, char* dest){
-
   if (disk < 0 || disk > PARTICIONES){
     printf("Input disco incorrecto\n");
     return -1;
   }
 
   if (orig == NULL) {
-    // indica que quieren copiar todo un sector. Particion o Disco ?
+    // indica que quieren copiar todo un sector. Particion o Disco completo?
     if (disk == 0){
       for (int partition = 1; partition < PARTICIONES + 1; partition++){
         cr_unload_particion_completa(partition, dest);
@@ -1767,7 +1764,7 @@ int cr_unload(unsigned disk, char* orig, char* dest){
       return 1;
     }
     else{
-      // Alguna particion completa
+      // particion completa
       cr_unload_particion_completa(disk, dest);
       return 1;
     }
@@ -1776,21 +1773,24 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     // Debemos copiar el archivo en "orig" en dest
     if (cr_exists(disk, orig)) {
       crFILE *unload_file = cr_open(disk, orig, "r");
-      char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
-      cr_read(unload_file, buffer, unload_file->indice->file_size);
-      FILE *move_to;
-      if ((move_to = fopen(dest, "wb")) == NULL)
-      {
-        printf("PATH INCORRECTO (%s)\n", dest);
-        return -1;
+      if (unload_file) {
+        char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
+        cr_read(unload_file, buffer, unload_file->indice->file_size);
+        FILE *move_to;
+        if ((move_to = fopen(dest, "wb")) == NULL)
+        {
+          printf("PATH INCORRECTO (%s)\n", dest);
+          return 0;
+        }
+        fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
+        fclose(move_to);
+        free(buffer);
+        return 1;
       }
-      fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
-      fclose(move_to);
-      free(buffer);
-      return 1;
-    }
 
+    }
   }
+
 }
 
 
@@ -1803,15 +1803,79 @@ int cr_load(unsigned disk, char* orig){
 // esten dentro de esta carpeta, ignorando cualquier carpeta adicional que tenga.
 
   if (disk < 0 || disk > PARTICIONES){
-    printf("Input disco incorrecto\n");
+    printf("ERROR: Input disco incorrecto\n");
     return -1;
   }
   if (orig == NULL) {
-    printf("orig NULL\n");
+    printf("ERROR: orig NULL\n");
     return -1;
   }
+  int carpeta = (orig[0] == '/');
+  // chequear si es carpeta al verificar su primera letra
 
+  if (!carpeta) {
+    FILE *file_to_upload = fopen(orig,"rb");
+    if(!file_to_upload){
+      printf("- Archivo - %s - no encontrado !\n", orig);
+      return 0;
+    }
 
-  cr_open(disk, orig, "w");
-  return 0;
+    printf("Archivo - %s - encontrado !\n", orig);
+    // abrimos archivo en disco
+    crFILE *new_upload = cr_open(disk, orig, "w");
+    if(new_upload == NULL){
+      printf("Error en escritura !\n");
+      return 0;
+    }
+    void* buffer = malloc(sizeof(char)*32);
+    char block_read[32];
+    while(fread(block_read, sizeof(block_read), 1, file_to_upload)){
+      buffer = block_read;
+      int escribir = cr_write(new_upload, buffer, 32);
+    }
+    fclose(file_to_upload);
+
+    //char* texto = calloc(14000, sizeof(char));
+    //fgets(texto, 10000, file_to_upload);
+    //int num = cr_write(new_upload, texto, 14000);
+    //cr_close(new_upload);
+    //free(texto);
+    //fclose(file_to_upload);
+    return 1;
+  }
+  else{
+    DIR *d;
+    struct dirent *dir;
+    // extraer todo el nombre excepto primer char y abrir
+    memmove(orig, orig+1, strlen(orig));
+    printf("------ LS directorio: %s ------\n", orig);
+    d = opendir(orig);
+    if (d) {
+      while ((dir = readdir(d)) != NULL) {
+        if (strncmp(".", dir->d_name, 1) != 0) {
+          printf("%s\n", dir->d_name);
+        }
+      }
+      closedir(d);
+    }
+    printf("------ FIN LS directorio: %s ------\n", orig);
+    printf("------ Transfiriendo archivos %s ------\n", orig);
+    d = opendir(orig);
+    if (d) {
+      while ((dir = readdir(d)) != NULL) {
+        if (strncmp(".", dir->d_name, 1) != 0) {
+          char* nuevo_nombre = malloc(sizeof(char)*32);
+          memcpy(nuevo_nombre, orig, 32);
+          strcat(nuevo_nombre,dir->d_name);
+          cr_load(disk, nuevo_nombre);
+          free(nuevo_nombre);
+        }
+      }
+      closedir(d);
+    }
+    return 1;
+    // carpeta
+    // parsear nombre Carpeta
+    // sacar todos los archivos  de la carpeta, y  cr_load()  ``
+  }
 }
