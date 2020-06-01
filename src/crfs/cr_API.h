@@ -1752,18 +1752,21 @@ int cr_unload(unsigned disk, char* orig, char* dest){
     // Debemos copiar el archivo en "orig" en dest
     if (cr_exists(disk, orig)) {
       crFILE *unload_file = cr_open(disk, orig, "r");
-      char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
-      cr_read(unload_file, buffer, unload_file->indice->file_size);
-      FILE *move_to;
-      if ((move_to = fopen(dest, "wb")) == NULL)
-      {
-        printf("PATH INCORRECTO (%s)\n", dest);
-        return 0;
+      if (unload_file) {
+        char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
+        cr_read(unload_file, buffer, unload_file->indice->file_size);
+        FILE *move_to;
+        if ((move_to = fopen(dest, "wb")) == NULL)
+        {
+          printf("PATH INCORRECTO (%s)\n", dest);
+          return 0;
+        }
+        fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
+        fclose(move_to);
+        free(buffer);
+        return 1;
       }
-      fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
-      fclose(move_to);
-      free(buffer);
-      return 1;
+
     }
   }
 

@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
   printf("Funcionalidad 1: Copiar un archivo desde disco X desde una direccion de origen a una destino\n");
   printf("Usaremos archivos de la particion: 1\n");
   printf("En la particion 1 tenemos:\n");
-  printf("------------ CR LS PARTICION 1 ------------\n");
+  printf("------------------------ CR LS PARTICION 1 ------------------------\n");
   cr_ls(1);
-  printf("------------ FIN CR LS ------------\n");
+  printf("------------------------ FIN CR LS ------------------------\n");
   printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
   printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
 
@@ -48,8 +48,9 @@ int main(int argc, char *argv[]) {
 
   printf("-------------------------------------------------\n");
   printf("Funcionalidad 2: Particion completa de disco.\n");
-  printf("Que particion desea copiar a carpeta: unload/? (1-4):");
+  printf("Que particion desea copiar a < unload/ >  ? (1-4):");
 
+  char carpeta[40] =  "unload/";
   unsigned disk;
 
   scanf("%u", &disk);
