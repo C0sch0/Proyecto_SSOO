@@ -1713,17 +1713,18 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
 void cr_unload_particion_completa(unsigned disk, char* dest){
   Directory* disco = Dir_disk[disk-1];
-  char* nuevo_nombre = malloc(sizeof(char)*32);
-  strcat(nuevo_nombre, UNLOAD_DIR);
   for (int i =0; i< BLOCK_ENTRIES; i++)
   {
     Entry* entrada = disco->entries[i];
     int a = !!((entrada->number[0] << 1) & 0x800000);
     if (a == 1){
-      strcat(nuevo_nombre, entrada->file_name);
-      cr_unload(disk, entrada->file_name, dest);
-      // memcpy(file->file_name, nombre_a_copiar, 29);
+      char* nuevo_nombre = malloc(sizeof(char)*32);
+      memcpy(nuevo_nombre, dest, 32);
+      strcat(nuevo_nombre,entrada->file_name);
+      cr_unload(disk, entrada->file_name, nuevo_nombre);
+      free(nuevo_nombre);
     }
+
   }
 }
 

@@ -27,7 +27,8 @@ int main(int argc, char *argv[]) {
   printf("-----------------------------------------------------------------------\n");
   printf("------------------------ TEST funciones UNLOAD ------------------------ \n");
   printf("-----------------------------------------------------------------------\n");
-  printf("Funcionalidad 1: Copiar un archivo desde disco X \n");
+  printf("Funcionalidad 1: Copiar un archivo desde disco X desde una direccion de origen a una destino\n");
+  printf("Usaremos archivos de la particion: 1\n");
   printf("En la particion 1 tenemos:\n");
   printf("------------ CR LS PARTICION 1 ------------\n");
   cr_ls(1);
@@ -46,40 +47,24 @@ int main(int argc, char *argv[]) {
 
 
   printf("-------------------------------------------------\n");
-  printf("Funcionalidad 2: Archivo a carpeta \n");
-  printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
-  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
-  printf("En ruta apuntaremos a la carpeta ./unload/\n");
-
-  char gif_info2[40] =  "QPC.gif";
-  char gif_new_info2[40] =  "copy_QPC.gif";
-  char file22[40] =  "guides.txt";
-  char file2_new_info22[40] =  "copy_guides.txt";
-  char direccion3[40] =  "/unload/";
-  cr_unload(1, gif_info, ".unload/");
-  cr_unload(1, file2, ".unload/");
-  printf("Archivo copiado desde %s a carpeta %s\n", gif_info, gif_new_info);
-  printf("Archivo copiado desde %s a ruta especifica %s\n", file2, file2_new_info2);
-
-  printf("-------------------------------------------------\n");
-  printf("Funcionalidad 3: Particion\n");
-  printf("Que particion ? (1-4):");
+  printf("Funcionalidad 2: Particion completa de disco.\n");
+  printf("Que particion desea copiar a carpeta: unload/? (1-4):");
 
   unsigned disk;
 
   scanf("%u", &disk);
-  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", disk, direccion3);
-  cr_unload(disk, NULL, ".unload/");
+  printf("Copiando todos los archivos de la particion %u a la carpeta /unload \n", disk);
+  cr_unload(disk, NULL, "unload/");
   printf("=== Particion copiada ===\n");
 
   printf("-------------------------------------------------:\n");
-  char file4[40] = "ungg";
-  printf("Funcionalidad 4: Disco Completo\n");
-  printf("Ruta a la que copiar el disco completo:");
-
+  printf("Funcionalidad 3: Disco Completo\n");
+  unsigned copy;
+  printf("Presione 1 para copiar disco completo: :\n");
+  scanf("%u", &copy);
   //scanf("%s", file4);
-  printf("Copiando todos los archivos del disco a la carpeta %s \n", direccion3);
-  cr_unload(0, NULL, ".unload/"); //file4
+  printf("Copiando todos los archivos del disco a la carpeta /unload \n");
+  cr_unload(0, NULL, "unload_disk/"); //file4
   printf("Disco copiado\n");
 
   printf("-------------------------------------------------:\n");
