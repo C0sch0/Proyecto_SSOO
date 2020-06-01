@@ -53,9 +53,9 @@ int main(int argc, char *argv[]) {
   cr_ls(disk2);
   printf("------------------------ FIN CR LS ------------------------\n");
   char carpeta[32];
-  scanf("Carpeta: %s", carpeta);
+  scanf("Carpeta: (/load/)%s", carpeta);
   printf("3. Carpeta: %s copiada\n", carpeta);
-  //cr_load(3, carpeta);
+  cr_load(disk2, carpeta);
   printf("------------------------ CR LS PARTICION %u ------------------------\n", disk2);
   cr_ls(disk2);
   printf("------------------------ FIN CR LS ------------------------\n");

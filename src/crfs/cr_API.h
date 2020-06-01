@@ -1788,21 +1788,31 @@ int cr_load(unsigned disk, char* orig){
     printf("ERROR: orig NULL\n");
     return -1;
   }
-  int archivo = 1;
-  if (archivo) {
-    
-    crFILE* arch2 = cr_open(disk, orig, "w");
-    char* buffer = calloc(1001, sizeof(char));
-    if(arch2 != NULL){
-      int num2 = cr_read(arch2, buffer, 1000);
-      cr_close(arch2);
+  int carpeta = 0;
+  // chequear si es carpeta al verificar su primer letra
+  if (!carpeta) {
+    FILE *file_to_upload = fopen(orig,"rb");
+    if(!file_to_upload){
+      printf("Archivo no encontrado !\n");
+      return 0;
     }
-    free(buffer);
+    printf("Archivo encontrado !\n");
+    // abrimos archivo en disco
+    crFILE *new_upload = cr_open(disk, orig, "w");
+    char* texto = calloc(14000, sizeof(char));
+    fgets(texto, 10000, file_to_upload);
+    if(new_upload != NULL){
+      int num = cr_write(new_upload, texto, 14000);
+      cr_close(new_upload);
+    }
+    free(texto);
+    fclose(new_upload);
+    return 1;
 
   }
   else{
+    // carpeta
+    // parsear nombre Carpeta
+    // sacar todos los archivos  de la carpeta, y  cr_load()  ``
   }
-
-
-  return 0;
 }
