@@ -24,12 +24,13 @@ int main(int argc, char *argv[]) {
   
   // TEST 6
   printf("Archivos en particion 1\n");
-  cr_ls(2);
+  cr_ls(1);
   printf("\n\n");
   printf("Archivos en particion 2\n");
   cr_ls(2);
   printf("\n\n");
-  cr_soflink(1, 2, "guides_copy.txt");
+
+  cr_soflink(1, 2, "guides.txt");
 
   printf("Archivos en particion 1\n");
   cr_ls(1);
@@ -37,10 +38,11 @@ int main(int argc, char *argv[]) {
   printf("Archivos en particion 1\n");
   cr_ls(2);
   printf("\n\n");
-  cr_rm(2, "guides.txt");
+
+  cr_rm(1, "guides.txt");
 
 
-  crFILE* arch = cr_open(2, "1/guides_copy.txt","r");
+  crFILE* arch = cr_open(2, "1/guides.txt","r");
   char* buffer = calloc(1001, sizeof(char));
   int num = cr_read(arch, buffer, 1000);
   printf("num bytes leidos = %d\n", num);

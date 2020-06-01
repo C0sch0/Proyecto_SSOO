@@ -1327,11 +1327,13 @@ int cr_rm(unsigned disk, char* filename) {
   int hay_ind = 1;
 
   int is_soft;
-  FILE* disco = fopen(ruta_archivo, "r");
+  
 
   // Manejo de errores de input
   if (disk < 1 || disk > 4){
     printf("ERROR: Particion ingresada no es valida\n");
+    free(indice_aux);
+    free(dir);
     return 1;
   }
   if (cr_exists(disk, filename)) {
@@ -1388,6 +1390,7 @@ int cr_rm(unsigned disk, char* filename) {
     }
 
     if (is_soft == 0){
+      FILE* disco = fopen(ruta_archivo, "r");
       // Seteamos el archivo en el bloque indice
       fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
 
@@ -1487,6 +1490,8 @@ int cr_rm(unsigned disk, char* filename) {
 
   } else {
     printf("ERROR: Archivo no existe\n");
+    free(indice_aux);
+    free(dir);
     return 1;
   }
   return 0;
@@ -1494,7 +1499,7 @@ int cr_rm(unsigned disk, char* filename) {
 
 int cr_hardlink (unsigned disk, char* orig, char* dest) {
 
-  FILE* disco = fopen(ruta_archivo, "r");
+  
 
   int n_bloque_indice;
 
@@ -1549,7 +1554,8 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     // Le sumamos 1 a la cantidad de referencias del archivo
     char* aux = malloc(sizeof(char)*8192);
 
-     // Seteamos el archivo en el bloque indice
+    FILE* disco = fopen(ruta_archivo, "r");
+    // Seteamos el archivo en el bloque indice
     fseek(disco, 8192 * n_bloque_indice, SEEK_SET);
 
     // Leemos el bloque indice
@@ -1570,6 +1576,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     fwrite(aux, 8192, 1, disco_w);
 
     free(aux);
+    fclose(disco_w);
 
     // Copiamos la informacion a una nueva entrada del directorio, con puntero al bloque indice del otro archivo
     // La parte "number" es igual a la del archivo original
@@ -1600,7 +1607,6 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
     free(aux_linea);
     fclose(disco_act);
 
-    //actualizar_bitmap(disk);
 
   } else {
     printf("ERROR: Archivo origen no existe\n");
@@ -1614,8 +1620,6 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
 
 int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
-  FILE* disco = fopen(ruta_archivo, "r");
-
   int n_bloque_indice;
 
   char * nombre_f = malloc(sizeof(char)*29);
@@ -1628,11 +1632,13 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
   // Manejo de errores de input
   if (disk_orig < 1 || disk_orig > 4){
     printf("ERROR: Particion origen ingresada no es valida\n");
+    free(nombre_f);
     return 1;
   }
 
   if (disk_dest < 1 || disk_dest > 4){
     printf("ERROR: Particion destino ingresada no es valida\n");
+    free(nombre_f);
     return 1;
   }
 
@@ -1645,6 +1651,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
   strcat(nombre_f, "/");
   strcat(nombre_f, copy_n);
 
+  free(copy_n);
   // Revisamos si el archivo origen existe
   if (cr_exists(disk_orig, orig)) {
 
@@ -1654,6 +1661,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
       if (strncmp(Dir_disk[disk_dest-1]->entries[i]->file_name , nombre_f, 32) == 0)
       {
         printf("ERROR: Ya existe un archivo con ese Nombre\n");
+        free(nombre_f);
         return 1;
       }
     }
@@ -1686,6 +1694,9 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
         break;
       }
     }
+    free(Dir_disk[disk_dest-1]-> entries[libre]->file_name);
+    free(Dir_disk[disk_dest-1]-> entries[libre]->number);
+    free(Dir_disk[disk_dest-1]-> entries[libre]);
 
     Dir_disk[disk_dest-1]-> entries[libre] = entry_init();
     memcpy(Dir_disk[disk_dest-1]-> entries[libre]->file_name, nombre_f, 29);
@@ -1702,8 +1713,10 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
     free(aux_linea);
     fclose(disco_act);
 
+    free(nombre_f);
   } else {
     printf("ERROR: Archivo origen no existe\n");
+    free(nombre_f);
     return 1;
   }
 
