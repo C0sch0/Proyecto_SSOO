@@ -1790,6 +1790,7 @@ int cr_load(unsigned disk, char* orig){
   }
   int archivo = 1;
   if (archivo) {
+    
     crFILE* arch2 = cr_open(disk, orig, "w");
     char* buffer = calloc(1001, sizeof(char));
     if(arch2 != NULL){
