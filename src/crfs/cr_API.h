@@ -1835,7 +1835,6 @@ int cr_load(unsigned disk, char* orig){
         if (strncmp(".", dir->d_name, 1) != 0) {
           printf("%s\n", dir->d_name);
         }
-
       }
       closedir(d);
     }
@@ -1845,7 +1844,11 @@ int cr_load(unsigned disk, char* orig){
     if (d) {
       while ((dir = readdir(d)) != NULL) {
         if (strncmp(".", dir->d_name, 1) != 0) {
-          cr_load(disk, dir->d_name);
+          char* nuevo_nombre = malloc(sizeof(char)*32);
+          memcpy(nuevo_nombre, orig, 32);
+          strcat(nuevo_nombre,dir->d_name);
+          cr_load(disk, nuevo_nombre);
+          free(nuevo_nombre);
         }
       }
       closedir(d);
