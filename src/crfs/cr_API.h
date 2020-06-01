@@ -1725,7 +1725,6 @@ void cr_unload_particion_completa(unsigned disk, char* dest){
       cr_unload(disk, entrada->file_name, nuevo_nombre);
       free(nuevo_nombre);
     }
-
   }
 }
 
@@ -1757,10 +1756,26 @@ int cr_unload(unsigned disk, char* orig, char* dest){
         char* buffer = calloc(unload_file->indice->file_size, sizeof(char));
         cr_read(unload_file, buffer, unload_file->indice->file_size);
         FILE *move_to;
-        
         if ((move_to = fopen(dest, "wb")) == NULL){
-          printf("PATH INCORRECTO (%s)\n", dest);
-          return 0;
+
+          // Esto es un softlink, debemos parsear nombre
+          char* nuevo_nombre = malloc(sizeof(char)*32);
+          char *token;
+          token = strtok(dest, "/");
+          printf("carpeta: %s\n", token);
+          memcpy(nuevo_nombre, token, 32);
+          strcat(nuevo_nombre, "/s_");
+          token = strtok(NULL, "/");
+          strcat(nuevo_nombre, token);
+          strcat(nuevo_nombre, "_");
+          token = strtok(NULL, "/");
+          strcat(nuevo_nombre, token);
+          // una vez listo el nombre, enviamos a escribir
+          move_to = fopen(nuevo_nombre, "wb");
+          fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
+          fclose(move_to);
+          free(buffer);
+          return 1;
         }
         fwrite(buffer, sizeof(char), unload_file->indice->file_size, move_to);
         fclose(move_to);
@@ -1792,21 +1807,19 @@ int cr_load(unsigned disk, char* orig){
   }
   int carpeta = (orig[0] == '/');
   // chequear si es carpeta al verificar su primera letra
-
   if (!carpeta) {
     FILE *file_to_upload = fopen(orig,"rb");
     if(!file_to_upload){
       printf("- Archivo - %s - no encontrado !\n", orig);
       return 0;
     }
-
     printf("Archivo - %s - encontrado !\n", orig);
-    // abrimos archivo en disco
     crFILE *new_upload = cr_open(disk, orig, "w");
     if(new_upload == NULL){
       printf("Error en escritura !\n");
       return 0;
     }
+    // Rellenar informacion dentro de archivo en particion
     void* buffer = malloc(sizeof(char)*32);
     char block_read[32];
     while(fread(block_read, sizeof(block_read), 1, file_to_upload)){

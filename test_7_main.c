@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   printf("Funcionalidad 2: Particion completa de disco.\n");
   printf("Que particion desea copiar a < unload/ >  ? (1-4):");
 
-  char carpeta[40] =  "unload/";
+  char carpeta[40] =  "unload-";
   unsigned disk;
 
   scanf("%u", &disk);
