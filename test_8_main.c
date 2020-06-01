@@ -41,18 +41,20 @@ int main(int argc, char *argv[]) {
   char file2[40] = "unload/copia_QPC.gif";
   cr_load(3, file1);
   //cr_load(3, file2);
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
-  printf("------------------ Ambos archivos han sido creados dentro de 3 ------------------ \n");
-  printf("------------------ Ahora copiamos una carpeta a particion 3 ------------------ \n");
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
-  char carpeta[40] = "Intrucciones/";
-  printf("------------------ Copiando carpeta ------------------ \n");
-  cr_load(3, carpeta);
-  printf("------------------ Archivos carpeta %s subidos a particion 3 ------------------ \n", carpeta);
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
+
+  //printf("------------------ CR LS Particion 3 ------------------ \n");
+  //cr_ls(3);
+  //printf("------------------ Ambos archivos han sido creados dentro de 3 ------------------ \n");
+  //printf("------------------------------------------------------------------- \n");
+  //printf("------------------ Ahora copiamos una carpeta a particion 3 ------------------ \n");
+  //printf("------------------ CR LS Particion 3 ------------------ \n");
+  //cr_ls(3);
+  //char carpeta[40] = "Intrucciones/";
+  //printf("------------------ Copiando carpeta ------------------ \n");
+  //cr_load(3, carpeta);
+  //printf("------------------ Archivos carpeta %s subidos a particion 3 ------------------ \n", carpeta);
+  //printf("------------------ CR LS Particion 3 ------------------ \n");
+  //cr_ls(3);
   destroy_directories();
   destroy_bitmaps();
 

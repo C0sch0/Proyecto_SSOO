@@ -20,40 +20,47 @@ int main(int argc, char *argv[]) {
     printf("Disk not mounted");
     return 0;
   }
-
   create_dir_blocks();
   create_cr_bitmaps();
+  printf("------------ TEST funciones UNLOAD ------------ \n");
+  printf("-------------------------------------------------:\n");
+  printf("Funcionalidad 1: Copiar un archivo\n");
+  printf("En la particion 1 tenemos:\n");
+  printf("------------ CR LS ------------\n");
+  cr_ls(1);
+  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
+  printf("En ruta apuntaremos a la carpeta ./unload/\n");
 
-  printf("LOAD\n");
+  char file1[40] =  "QPC.gif";
+  char file2[40] = "unload/copia_QPC.gif";
+
+  cr_unload(1, file1, file2);
+  printf("Archivo copiado desde ./guides.txt a ./unload/copy_guides.txt\n");
+  printf(" \n" );
+
   printf("-------------------------------------------------\n");
 
-  printf("Funcionalidad 1: Subir un archivo a cierta particion\n");
+  printf("Funcionalidad 2: Particion\n");
+  printf("Que particion ? (1-4):");
+  char direccion3[40] =  "unload/";
+  unsigned disk;
 
-  printf("1 - En la particion 3 tenemos:\n");
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
-  printf("Particion 3 vacia \n");
-  printf("2. Probaremos primero copiando un archivo txt y un .gif a esta particion.\n");
-  printf("3. Archivo .txt copiado\n");
-  printf("4. Archivo .gif copiado\n");
+  scanf("%u", &disk);
+  printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", direccion3);
+  cr_unload(disk, NULL, direccion3);
+  printf("=== Particion copiada ===\n");
 
-  char file1[40] =  "prueba.txt";
-  char file2[40] = "unload/copia_QPC.gif";
-  cr_load(3, file1);
-  //cr_load(3, file2);
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
-  printf("------------------ Ambos archivos han sido creados dentro de 3 ------------------ \n");
-    printf("------------------------------------------------------------------- \n");
-  printf("------------------ Ahora copiamos una carpeta a particion 3 ------------------ \n");
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
-  char carpeta[40] = "Intrucciones/";
-  printf("------------------ Copiando carpeta ------------------ \n");
-  cr_load(3, carpeta);
-  printf("------------------ Archivos carpeta %s subidos a particion 3 ------------------ \n", carpeta);
-  printf("------------------ CR LS Particion 3 ------------------ \n");
-  cr_ls(3);
+  printf("-------------------------------------------------:\n");
+  char file4[40] = "ungg";
+  printf("Funcionalidad 3: Disco Completo\n");
+  printf("Ruta a la que copiar el disco completo:");
+
+  //scanf("%s", file4);
+  printf("Copiando todos los archivos del disco a la carpeta %s \n", direccion3);
+  cr_unload(0, NULL, direccion3); //file4
+  printf("Disco copiado\n");
+
+  printf("-------------------------------------------------:\n");
   destroy_directories();
   destroy_bitmaps();
 

@@ -1344,7 +1344,7 @@ int cr_rm(unsigned disk, char* filename) {
       // No es softlink
       is_soft = 0;
     }
-    else 
+    else
     {
       // Si es softlink
       is_soft = 1;
@@ -1458,7 +1458,7 @@ int cr_rm(unsigned disk, char* filename) {
 
             memcpy(dir, &(i_indice_aux[q]), 4);
             int ref = buscar_ref(dir);
-            
+
             if (ref == 0) {
             break;
           }
@@ -1481,7 +1481,7 @@ int cr_rm(unsigned disk, char* filename) {
       free(dir);
       fclose(disco);
     }
-    
+
 
   } else {
     printf("ERROR: Archivo no existe\n");
@@ -1621,7 +1621,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
   char * nombre;
 
   int libre;
-  
+
   // Manejo de errores de input
   if (disk_orig < 1 || disk_orig > 4){
     printf("ERROR: Particion origen ingresada no es valida\n");
@@ -1636,7 +1636,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
   // Generamos el nonmbre del soflink a partir del input
   char * copy_n = malloc(sizeof(char)*29);
   strcpy(copy_n, orig);
-  
+
   sprintf(nombre_f, "%u", disk_orig);
 
   strcat(nombre_f, "/");
@@ -1713,6 +1713,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
 void cr_unload_particion_completa(unsigned disk, char* dest){
   Directory* disco = Dir_disk[disk-1];
+  printf("dest:   %s\n", dest);
   for (int i =0; i< BLOCK_ENTRIES; i++)
   {
     Entry* entrada = disco->entries[i];
