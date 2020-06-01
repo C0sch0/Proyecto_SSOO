@@ -24,11 +24,10 @@ int main(int argc, char *argv[]) {
   create_dir_blocks();
   create_cr_bitmaps();
 
-  printf("LOAD\n");
-  printf("-------------------------------------------------\n");
-
+  printf("-----------------------------------------------------------------------\n");
+  printf("------------------------ TEST funciones LOAD ------------------------ \n");
+  printf("-----------------------------------------------------------------------\n");
   printf("Funcionalidad 1: Subir un archivo a cierta particion\n");
-
   printf("1 - En la particion 3 tenemos:\n");
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
@@ -36,7 +35,6 @@ int main(int argc, char *argv[]) {
   printf("2. Probaremos primero copiando un archivo txt y un .gif a esta particion.\n");
   printf("3. Archivo .txt copiado\n");
   printf("4. Archivo .gif copiado\n");
-
   char file1[40] =  "prueba.txt";
   char file2[40] = "unload/copia_QPC.gif";
   cr_load(3, file1);
