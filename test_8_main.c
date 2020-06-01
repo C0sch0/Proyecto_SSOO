@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
   char file1[40] =  "prueba.txt";
   char file2[40] = "unload/copia_QPC.gif";
   cr_load(3, file1);
-  cr_load(3, file2);
+  //cr_load(3, file2);
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
   printf("------------------ Ambos archivos han sido creados dentro de 3 ------------------ \n");
@@ -48,7 +48,8 @@ int main(int argc, char *argv[]) {
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);
   char carpeta[40] = "Intrucciones/";
-  //cr_load(3, carpeta);
+  printf("------------------ Copiando carpeta ------------------ \n");
+  cr_load(3, carpeta);
   printf("------------------ Archivos carpeta %s subidos a particion 3 ------------------ \n", carpeta);
   printf("------------------ CR LS Particion 3 ------------------ \n");
   cr_ls(3);

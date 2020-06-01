@@ -23,40 +23,37 @@ int main(int argc, char *argv[]) {
 
   create_dir_blocks();
   create_cr_bitmaps();
-  crFILE* arch = cr_open(4, "Orgullo y Prejuicio.txt","w");
-  FILE* prueba = fopen("prueba.txt", "r");
-  char* texto = calloc(14000, sizeof(char));
-  fgets(texto, 10000, prueba);
-  int num = cr_write(arch, texto, 14000);
-  free(texto);
-  fclose(prueba);
-  cr_close(arch);
-  crFILE* arch2 = cr_open(4, "Orgullo y Prejuicio.txt","r");
-  char* buffer = calloc(3001, sizeof(char));
-  int num2 = cr_read(arch2, buffer, 3000);
-  printf("num bytes leidos = %d\n", num2);
-  printf("Extracto 1 = %s\n", buffer);
-  printf("\n\n\n");
-  char* buffer2 = calloc(5001, sizeof(char));
-  int num3 = cr_read(arch2, buffer2, 5000);
-  printf("num bytes leidos = %d\n", num3);
-  printf("Extracto 2 = %s\n", buffer2);
-  printf("\n\n\n");
-  char* buffer3 = calloc(6001, sizeof(char));
-  int num4 = cr_read(arch2, buffer3, 6000);
-  printf("num bytes leidos = %d\n", num4);
-  printf("Extracto 3 = %s\n", buffer3);
-  printf("\n\n\n");
-  char* buffer4 = calloc(1001, sizeof(char));
-  int num5 = cr_read(arch2, buffer4, 1000);
-  printf("num bytes leidos = %d\n", num5);
-  printf("Extracto 4 = %s\n", buffer4);
-  printf("\n\n\n");
-  free(buffer);
-  free(buffer2);
-  free(buffer3);
-  free(buffer4);
-  cr_close(arch2);
+
+  printf("LOAD\n");
+  printf("-------------------------------------------------\n");
+
+  printf("Funcionalidad 1: Subir un archivo a cierta particion\n");
+
+  printf("1 - En la particion 3 tenemos:\n");
+  printf("------------------ CR LS Particion 3 ------------------ \n");
+  cr_ls(3);
+  printf("Particion 3 vacia \n");
+  printf("2. Probaremos primero copiando un archivo txt y un .gif a esta particion.\n");
+  printf("3. Archivo .txt copiado\n");
+  printf("4. Archivo .gif copiado\n");
+
+  char file1[40] =  "prueba.txt";
+  char file2[40] = "unload/copia_QPC.gif";
+  cr_load(3, file1);
+  //cr_load(3, file2);
+  printf("------------------ CR LS Particion 3 ------------------ \n");
+  cr_ls(3);
+  printf("------------------ Ambos archivos han sido creados dentro de 3 ------------------ \n");
+    printf("------------------------------------------------------------------- \n");
+  printf("------------------ Ahora copiamos una carpeta a particion 3 ------------------ \n");
+  printf("------------------ CR LS Particion 3 ------------------ \n");
+  cr_ls(3);
+  char carpeta[40] = "Intrucciones/";
+  printf("------------------ Copiando carpeta ------------------ \n");
+  cr_load(3, carpeta);
+  printf("------------------ Archivos carpeta %s subidos a particion 3 ------------------ \n", carpeta);
+  printf("------------------ CR LS Particion 3 ------------------ \n");
+  cr_ls(3);
   destroy_directories();
   destroy_bitmaps();
 
