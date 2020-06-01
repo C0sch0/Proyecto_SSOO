@@ -1791,7 +1791,8 @@ int cr_load(unsigned disk, char* orig){
     return -1;
   }
   int carpeta = (orig[0] == '/');
-  // chequear si es carpeta al verificar su primer letra
+  // chequear si es carpeta al verificar su primera letra
+
   if (!carpeta) {
     FILE *file_to_upload = fopen(orig,"rb");
     if(!file_to_upload){
@@ -1801,12 +1802,14 @@ int cr_load(unsigned disk, char* orig){
     printf("Archivo encontrado !\n");
     // abrimos archivo en disco
     crFILE *new_upload = cr_open(disk, orig, "w");
+    if(new_upload == NULL){
+      printf("Error en escritura !\n");
+      return 0;
+    }
     char* texto = calloc(14000, sizeof(char));
     fgets(texto, 10000, file_to_upload);
-    if(new_upload != NULL){
-      int num = cr_write(new_upload, texto, 14000);
-      cr_close(new_upload);
-    }
+    int num = cr_write(new_upload, texto, 14000);
+    cr_close(new_upload);
     free(texto);
     fclose(file_to_upload);
     return 1;
@@ -1815,7 +1818,8 @@ int cr_load(unsigned disk, char* orig){
     printf("Leyendo directorio\n");
     DIR *d;
     struct dirent *dir;
-    d = opendir(".");
+    // extraer todo el nombre excepto primer char y abrir
+    d = opendir("load");
     if (d) {
       while ((dir = readdir(d)) != NULL) {
         if (strncmp(".", dir->d_name, 1) != 0) {
@@ -1826,6 +1830,7 @@ int cr_load(unsigned disk, char* orig){
       }
       closedir(d);
     }
+    return 1;
     // carpeta
     // parsear nombre Carpeta
     // sacar todos los archivos  de la carpeta, y  cr_load()  ``
