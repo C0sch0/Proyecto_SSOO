@@ -1796,10 +1796,10 @@ int cr_load(unsigned disk, char* orig){
   if (!carpeta) {
     FILE *file_to_upload = fopen(orig,"rb");
     if(!file_to_upload){
-      printf("Archivo no encontrado !\n");
+      printf("Archivo - %s - no encontrado !\n", orig);
       return 0;
     }
-    printf("Archivo encontrado !\n");
+    printf("Archivo - %s - encontrado !\n", orig);
     // abrimos archivo en disco
     crFILE *new_upload = cr_open(disk, orig, "w");
     if(new_upload == NULL){
@@ -1815,16 +1815,28 @@ int cr_load(unsigned disk, char* orig){
     return 1;
   }
   else{
-    printf("Leyendo directorio\n");
     DIR *d;
     struct dirent *dir;
     // extraer todo el nombre excepto primer char y abrir
-    d = opendir("load");
+    memmove(orig, orig+1, strlen(orig));
+    printf("------ LS directorio: %s ------\n", orig);
+    d = opendir(orig);
     if (d) {
       while ((dir = readdir(d)) != NULL) {
         if (strncmp(".", dir->d_name, 1) != 0) {
           printf("%s\n", dir->d_name);
-          //cr_load(disk, dir->d_name);
+        }
+
+      }
+      closedir(d);
+    }
+    printf("------ FIN LS directorio: %s ------\n", orig);
+    printf("------ Transfiriendo archivos %s ------\n", orig);
+    d = opendir(orig);
+    if (d) {
+      while ((dir = readdir(d)) != NULL) {
+        if (strncmp(".", dir->d_name, 1) != 0) {
+          cr_load(disk, dir->d_name);
         }
 
       }

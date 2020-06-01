@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
   create_dir_blocks();
   create_cr_bitmaps();
   //cr_bitmap(0, 1);
-  crFILE* arch = cr_open(4, "Orgullo y Prejuicio2.txt","w");
   printf("-----------------------------------------------------------------------\n");
   printf("------------------------ TEST funciones LOAD ------------------------ \n");
   printf("-----------------------------------------------------------------------\n");
@@ -54,7 +53,8 @@ int main(int argc, char *argv[]) {
   cr_ls(disk2);
   printf("------------------------ FIN CR LS ------------------------\n");
   char carpeta[32];
-  scanf("Carpeta: (/load/)%s", carpeta);
+  printf("Que directorio quiere leer?: (/load/)\n");
+  scanf("%s", carpeta);
   printf("3. Carpeta: %s copiada\n", carpeta);
   cr_load(disk2, carpeta);
   printf("------------------------ CR LS PARTICION %u ------------------------\n", disk2);
