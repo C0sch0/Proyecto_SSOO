@@ -27,45 +27,59 @@ int main(int argc, char *argv[]) {
   printf("-----------------------------------------------------------------------\n");
   printf("------------------------ TEST funciones UNLOAD ------------------------ \n");
   printf("-----------------------------------------------------------------------\n");
-  printf("Funcionalidad 1: Copiar un archivo\n");
+  printf("Funcionalidad 1: Copiar un archivo desde disco X \n");
   printf("En la particion 1 tenemos:\n");
-  printf("------------ CR LS ------------\n");
+  printf("------------ CR LS PARTICION 1 ------------\n");
   cr_ls(1);
   printf("------------ FIN CR LS ------------\n");
   printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
   printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
-  printf("En ruta apuntaremos a la carpeta ./unload/\n");
 
-  char file1[40] =  "QPC.gif";
+  char gif_info[40] =  "QPC.gif";
+  char gif_new_info[40] =  "copy_QPC.gif";
   char file2[40] =  "guides.txt";
-  char destino[40] = "/unload/";
-  cr_unload(1, file1, destino);
-  cr_unload(1, file2, destino);
-  printf("Archivo copiado desde ./guides.txt a ./unload/copy_guides.txt\n");
-  printf("------------ CR LS ------------\n");
-  cr_ls(1);
-  printf("------------ FIN CR LS ------------\n");
+  char file2_new_info2[40] =  "copy_guides.txt";
+  cr_unload(1, gif_info, gif_new_info);
+  cr_unload(1, file2, file2_new_info2);
+  printf("Archivo copiado desde %s a ruta especifica %s\n", gif_info, gif_new_info);
+  printf("Archivo copiado desde %s a ruta especifica %s\n", file2, file2_new_info2);
+
 
   printf("-------------------------------------------------\n");
+  printf("Funcionalidad 2: Archivo a carpeta \n");
+  printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
+  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
+  printf("En ruta apuntaremos a la carpeta ./unload/\n");
 
-  printf("Funcionalidad 2: Particion\n");
+  char gif_info2[40] =  "QPC.gif";
+  char gif_new_info2[40] =  "copy_QPC.gif";
+  char file22[40] =  "guides.txt";
+  char file2_new_info22[40] =  "copy_guides.txt";
+  char direccion3[40] =  "/unload/";
+  cr_unload(1, gif_info, ".unload/");
+  cr_unload(1, file2, ".unload/");
+  printf("Archivo copiado desde %s a carpeta %s\n", gif_info, gif_new_info);
+  printf("Archivo copiado desde %s a ruta especifica %s\n", file2, file2_new_info2);
+
+  printf("-------------------------------------------------\n");
+  printf("Funcionalidad 3: Particion\n");
   printf("Que particion ? (1-4):");
-  char direccion3[40] =  "unload/";
+
   unsigned disk;
 
   scanf("%u", &disk);
   printf("Copiando todos los archivos de la particion %u a la carpeta %s \n", disk, direccion3);
-  cr_unload(disk, NULL, direccion3);
+  cr_unload(disk, NULL, ".unload/");
   printf("=== Particion copiada ===\n");
 
   printf("-------------------------------------------------:\n");
   char file4[40] = "ungg";
-  printf("Funcionalidad 3: Disco Completo\n");
+  printf("Funcionalidad 4: Disco Completo\n");
   printf("Ruta a la que copiar el disco completo:");
 
   //scanf("%s", file4);
   printf("Copiando todos los archivos del disco a la carpeta %s \n", direccion3);
-  cr_unload(0, NULL, direccion3); //file4
+  cr_unload(0, NULL, ".unload/"); //file4
   printf("Disco copiado\n");
 
   printf("-------------------------------------------------:\n");
