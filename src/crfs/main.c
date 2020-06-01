@@ -20,54 +20,43 @@ int main(int argc, char *argv[]) {
     printf("Disk not mounted");
     return 0;
   }
+
   create_dir_blocks();
   create_cr_bitmaps();
-  char destino1[40] = "unload/QPC.gif";
-  char destino2[40] = "unload/guides.txt";
-  printf("-----------------------------------------------------------------------\n");
-  printf("------------------------ TEST funciones UNLOAD ------------------------ \n");
-  printf("-----------------------------------------------------------------------\n");
-  printf("Funcionalidad 1: Copiar un archivo desde disco X desde una direccion de origen a una destino\n");
-  printf("Usaremos archivos de la particion: 1\n");
-  printf("En la particion 1 tenemos:\n");
-  printf("------------------------ CR LS PARTICION 1 ------------------------\n");
-  cr_ls(1);
-  printf("------------------------ FIN CR LS ------------------------\n");
-  printf("Copiaremos el archivo de nombre QPC.gif de la particion 1\n");
-  printf("Copiaremos el archivo de nombre guides.txt de la particion 1\n");
-
-  char gif_info[40] =  "QPC.gif";
-  char gif_new_info[40] =  "copy_QPC.gif";
-  char file2[40] =  "guides.txt";
-  char file2_new_info2[40] =  "copy_guides.txt";
-  cr_unload(1, gif_info, gif_new_info);
-  cr_unload(1, file2, file2_new_info2);
-  printf("Archivo copiado desde %s a ruta especifica %s\n", gif_info, gif_new_info);
-  printf("Archivo copiado desde %s a ruta especifica %s\n", file2, file2_new_info2);
-
-  printf("-------------------------------------------------\n");
-  printf("Funcionalidad 2: Particion completa de disco.\n");
-  printf("Que particion desea copiar a < unload/ >  ? (1-4):");
-
-  char carpeta[40] =  "unload-";
-  unsigned disk;
-
-  scanf("%u", &disk);
-  printf("Copiando todos los archivos de la particion %u a la carpeta /unload \n", disk);
-  cr_unload(disk, NULL, "unload/");
-  printf("=== Particion copiada ===\n");
-
-  printf("-------------------------------------------------:\n");
-  printf("Funcionalidad 3: Disco Completo\n");
-  unsigned copy;
-  printf("Presione 1 para copiar disco completo: :\n");
-  scanf("%u", &copy);
-  //scanf("%s", file4);
-  printf("Copiando todos los archivos del disco a la carpeta /unload \n");
-  cr_unload(0, NULL, "unload_disk/"); //file4
-  printf("Disco copiado\n");
-
-  printf("-------------------------------------------------:\n");
+  crFILE* arch = cr_open(4, "Orgullo y Prejuicio.txt","w");
+  FILE* prueba = fopen("prueba.txt", "r");
+  char* texto = calloc(14000, sizeof(char));
+  fgets(texto, 10000, prueba);
+  int num = cr_write(arch, texto, 14000);
+  free(texto);
+  fclose(prueba);
+  cr_close(arch);
+  crFILE* arch2 = cr_open(4, "Orgullo y Prejuicio.txt","r");
+  char* buffer = calloc(3001, sizeof(char));
+  int num2 = cr_read(arch2, buffer, 3000);
+  printf("num bytes leidos = %d\n", num2);
+  printf("Extracto 1 = %s\n", buffer);
+  printf("\n\n\n");
+  char* buffer2 = calloc(5001, sizeof(char));
+  int num3 = cr_read(arch2, buffer2, 5000);
+  printf("num bytes leidos = %d\n", num3);
+  printf("Extracto 2 = %s\n", buffer2);
+  printf("\n\n\n");
+  char* buffer3 = calloc(6001, sizeof(char));
+  int num4 = cr_read(arch2, buffer3, 6000);
+  printf("num bytes leidos = %d\n", num4);
+  printf("Extracto 3 = %s\n", buffer3);
+  printf("\n\n\n");
+  char* buffer4 = calloc(1001, sizeof(char));
+  int num5 = cr_read(arch2, buffer4, 1000);
+  printf("num bytes leidos = %d\n", num5);
+  printf("Extracto 4 = %s\n", buffer4);
+  printf("\n\n\n");
+  free(buffer);
+  free(buffer2);
+  free(buffer3);
+  free(buffer4);
+  cr_close(arch2);
   destroy_directories();
   destroy_bitmaps();
 
