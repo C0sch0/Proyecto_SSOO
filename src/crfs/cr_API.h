@@ -1485,6 +1485,7 @@ int cr_rm(unsigned disk, char* filename) {
 
   } else {
     printf("ERROR: Archivo no existe\n");
+    return 1;
   }
   return 0;
 }
@@ -1515,7 +1516,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
       if (strncmp(Dir_disk[disk-1]->entries[i]->file_name , dest, 32) == 0)
       {
         printf("ERROR: Ya existe un archivo con ese Nombre\n");
-        return 0;
+        return 1;
       }
     }
 
@@ -1601,7 +1602,7 @@ int cr_hardlink (unsigned disk, char* orig, char* dest) {
 
   } else {
     printf("ERROR: Archivo origen no existe\n");
-
+    return 1;
   }
 
 
@@ -1651,7 +1652,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
       if (strncmp(Dir_disk[disk_dest-1]->entries[i]->file_name , nombre_f, 32) == 0)
       {
         printf("ERROR: Ya existe un archivo con ese Nombre\n");
-        return 0;
+        return 1;
       }
     }
 
@@ -1701,7 +1702,7 @@ int cr_soflink (unsigned disk_orig, unsigned disk_dest, char* orig) {
 
   } else {
     printf("ERROR: Archivo origen no existe\n");
-
+    return 1;
   }
 
 
