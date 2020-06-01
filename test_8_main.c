@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   create_dir_blocks();
   create_cr_bitmaps();
   //cr_bitmap(0, 1);
-  crFILE* arch = cr_open(1, "Orgullo y Prejuicio2.txt","w");
+  crFILE* arch = cr_open(4, "Orgullo y Prejuicio2.txt","w");
   printf("-----------------------------------------------------------------------\n");
   printf("------------------------ TEST funciones LOAD ------------------------ \n");
   printf("-----------------------------------------------------------------------\n");

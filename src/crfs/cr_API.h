@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <dirent.h>
+#include <stdio.h>
 #include "structs.h"
 
 #define PARTICIONES 4
@@ -1788,17 +1790,17 @@ int cr_load(unsigned disk, char* orig){
     printf("ERROR: orig NULL\n");
     return -1;
   }
-  int carpeta = 0;
+  int carpeta = (orig[0] == '/');
   // chequear si es carpeta al verificar su primer letra
   if (!carpeta) {
-    FILE *file_to_upload = fopen("prueba.txt","rb");
+    FILE *file_to_upload = fopen(orig,"rb");
     if(!file_to_upload){
       printf("Archivo no encontrado !\n");
       return 0;
     }
     printf("Archivo encontrado !\n");
     // abrimos archivo en disco
-    crFILE *new_upload = cr_open(disk, "prueba.txt", "w");
+    crFILE *new_upload = cr_open(disk, orig, "w");
     char* texto = calloc(14000, sizeof(char));
     fgets(texto, 10000, file_to_upload);
     if(new_upload != NULL){
@@ -1810,6 +1812,20 @@ int cr_load(unsigned disk, char* orig){
     return 1;
   }
   else{
+    printf("Leyendo directorio\n");
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(".");
+    if (d) {
+      while ((dir = readdir(d)) != NULL) {
+        if (strncmp(".", dir->d_name, 1) != 0) {
+          printf("%s\n", dir->d_name);
+          //cr_load(disk, dir->d_name);
+        }
+
+      }
+      closedir(d);
+    }
     // carpeta
     // parsear nombre Carpeta
     // sacar todos los archivos  de la carpeta, y  cr_load()  ``
