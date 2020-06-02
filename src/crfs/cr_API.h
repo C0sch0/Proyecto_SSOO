@@ -51,7 +51,7 @@ Indirect* init_ind_simple()
 Index* init_indice()
 {
   Index* indice = malloc(sizeof(Index));
-  indice->references = 0;
+  indice->references = 1;
   indice->file_size = 0;
   indice->indirect_simple = 0;
   indice->blocks_data = malloc(sizeof(unsigned int)*2044);
@@ -694,7 +694,7 @@ crFILE* cr_open(unsigned disk, char* filename, char *mode){
       printf("file size = %ld\n", ind->file_size);
       printf("numero bloque indice = %d\n", file->n_b_indice);
       printf("primer bloque de datos = %d\n", ind->blocks_data[0]);
-      printf("ultimo bloque de datos = %d\n", ind->blocks_data[blocks_ocup - 1]);
+      //printf("ultimo bloque de datos = %d\n", ind->blocks_data[blocks_ocup - 1]);
       free(st);
       free(str);
       free(indice_aux);
@@ -1832,28 +1832,31 @@ int cr_load(unsigned disk, char* orig){
   int carpeta = (orig[0] == '/');
   // chequear si es carpeta al verificar su primera letra
   if (!carpeta) {
-    FILE *file_to_upload = fopen(orig,"rb");
+    FILE *file_to_upload = fopen(orig,"r");
     if(!file_to_upload){
       printf("- Archivo - %s - no encontrado !\n", orig);
       return 0;
     }
+
     printf("Archivo - %s - encontrado !\n", orig);
     crFILE *new_upload = cr_open(disk, orig, "w");
-    if(new_upload == NULL){
+    if(!new_upload){
       printf("Error en escritura !\n");
       fclose(file_to_upload);
       return 0;
     }
     // Rellenar informacion dentro de archivo en particion
-    void* buffer = malloc(sizeof(char)*32);
-    char block_read[32];
-    while(fread(block_read, sizeof(block_read), 1, file_to_upload)){
-      buffer = block_read;
-      int escribir = cr_write(new_upload, buffer, 32);
-    }
+    char* buffer = calloc(32, sizeof(char));
+    fgets(buffer, 32, file_to_upload);
+    //char block_read[32];
+    //while(fread(buffer, 32, 1, file_to_upload)){
+      //buffer = block_read;
+    int escribir = cr_write(new_upload, buffer, 32);
+    //}
+    free(buffer);
     cr_close(new_upload);
     fclose(file_to_upload);
-    free(buffer);
+    
 
     //char* texto = calloc(14000, sizeof(char));
     //fgets(texto, 10000, file_to_upload);
@@ -1884,8 +1887,8 @@ int cr_load(unsigned disk, char* orig){
     if (d) {
       while ((dir = readdir(d)) != NULL) {
         if (strncmp(".", dir->d_name, 1) != 0) {
-          char* nuevo_nombre = malloc(sizeof(char)*32);
-          memcpy(nuevo_nombre, orig, 32);
+          char* nuevo_nombre = malloc(sizeof(char)*30);
+          memcpy(nuevo_nombre, orig, 29);
           strcat(nuevo_nombre,dir->d_name);
           cr_load(disk, nuevo_nombre);
           free(nuevo_nombre);
