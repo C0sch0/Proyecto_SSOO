@@ -48,11 +48,11 @@ int main(int argc, char *argv[]) {
 
   printf("-------------------------------------------------\n");
   printf("Funcionalidad 2: Particion completa de disco.\n");
-  printf("Que particion desea copiar a < unload/ >  ? (1-4):");
+  printf("Que particion desea copiar ? (1-4):");
 
   unsigned disk;
   scanf("%u", &disk);
-  printf("Donde quieres dejar todo esto ? ( Sugerencia: unload/ )");
+  printf("Donde quieres dejar todo esto ? ( Sugerencia: unload/ ): ");
   char unload_folder[32];
   scanf("%s", unload_folder);
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   printf("-------------------------------------------------:\n");
   printf("Funcionalidad 3: Disco Completo\n");
-  printf("Donde quieres dejar todo esto ? ( Sugerencia: unload_disk/ )");
+  printf("Donde quieres dejar todo esto ? ( Sugerencia: unload_disk/ ): ");
   char unload_disk_folder[32];
   scanf("%s", unload_disk_folder);
 
